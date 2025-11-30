@@ -1,0 +1,45 @@
+# RALFS Base Configuration for FiD Training
+defaults:
+  - _self_
+
+# Task to execute (override from CLI: task=preprocess)
+task: train_generator
+
+# Logging configuration
+logging:
+  level: "INFO"
+
+# Data processing
+data:
+  dataset: "govreport"
+  path: "data/raw"
+  chunk_size: 512
+  overlap: 128
+  max_samples: 10000  # For T4 experiments
+
+# Retriever configuration
+retriever:
+  model: "sentence-transformers/all-MiniLM-L12-v2"
+  dim: 384
+  index_path: "data/index/faiss.index"
+  top_k: 20
+  use_reranker: false
+
+# Generator (FiD) configuration
+generator:
+  model: "t5-base"
+  num_evidence: 5
+  lr: 1e-4
+  batch_size: 4  # T4-friendly; scale to 16+ on A100
+  epochs: 3
+  max_length: 1024
+  accelerator: "gpu"
+  devices: 1  # Auto-scale with Accelerate
+
+# Hydra output configuration
+hydra:
+  run:
+    dir: "outputs/${now:%Y-%m-%d}/${hydra.job.name}"
+  sweep:
+    dir: "multirun/${now:%Y-%m-%d}/${hydra.job.name}"
+    subdir: "${hydra.job.num}"
