@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import nltk
 import re
-from typing import List, Dict, Any, Tuple
+from typing import List, Dict, Any
 from dataclasses import dataclass
 from src.utils.logging import get_logger
 from omegaconf import DictConfig
-import numpy as np
-
 from pathlib import Path
+
+
 logger = get_logger(__name__)
 
 # Download required NLTK data
@@ -40,17 +40,8 @@ class SemanticChunker:
         self.tokenizer = nltk.tokenize.PunktSentenceTokenizer()
     
     def chunk_document(self, doc_text: str, doc_id: str) -> List[Chunk]:
-        """Split document into semantically coherent chunks.
-        
-        Strategy:
-        1. Sentence-level splitting
-        2. Semantic grouping (paragraph-like)
-        3. Token limit enforcement with overlap
-        """
-        # Clean text
+        """Split document into semantically coherent chunks."""
         doc_text = self._clean_text(doc_text)
-        
-        # Split into sentences
         sentences = self.tokenizer.tokenize(doc_text)
         chunks: List[Chunk] = []
         
@@ -61,11 +52,8 @@ class SemanticChunker:
         for i, sentence in enumerate(sentences):
             sentence_tokens = len(sentence.split())
             
-            # Start new chunk if adding sentence exceeds limit
             if (current_tokens + sentence_tokens > self.chunk_size and 
-                len(current_chunk) > 2):  # Minimum 3 sentences per chunk
-                
-                # Create chunk
+                len(current_chunk) > 2):
                 chunk_text = " ".join(current_chunk)
                 chunk = Chunk(
                     text=chunk_text,
@@ -78,7 +66,6 @@ class SemanticChunker:
                 )
                 chunks.append(chunk)
                 
-                # Slide window with overlap
                 start_pos += max(0, current_tokens - self.overlap)
                 current_chunk = current_chunk[-2:]  # Keep last 2 sentences
                 current_tokens = sum(len(s.split()) for s in current_chunk)
@@ -86,7 +73,6 @@ class SemanticChunker:
             current_chunk.append(sentence)
             current_tokens += sentence_tokens
         
-        # Add final chunk
         if current_chunk:
             chunk_text = " ".join(current_chunk)
             chunk = Chunk(
@@ -105,7 +91,6 @@ class SemanticChunker:
     
     def _clean_text(self, text: str) -> str:
         """Clean and normalize text."""
-        # Remove excessive whitespace
         text = re.sub(r'\n+', '\n', text)
         text = re.sub(r'\s+', ' ', text)
         return text.strip()
@@ -116,8 +101,7 @@ def preprocess_data(cfg: DictConfig) -> None:
     from src.data.download import DatasetDownloader
     from src.utils.io import RALFSDataManager
     
-    logger = get_logger(cfg=cfg)
-    logger.info("🚀 Starting RALFS Data Preprocessing")
+    logger.info(f"🚀 Starting RALFS Preprocessing | Dataset: {cfg.data.dataset.upper()}")
     
     # Download dataset
     data = DatasetDownloader.download(
@@ -138,17 +122,19 @@ def preprocess_data(cfg: DictConfig) -> None:
         for chunk in chunks:
             chunk.metadata.update({
                 "summary": doc["summary"],
-                "title": doc["title"]
+                "title": doc["title"],
+                "domain": doc["domain"],
+                "source": doc["source"]
             })
         all_chunks.extend(chunks)
     
     # Save processed data
-    output_dir = Path(cfg.data.path) / "processed"
+    output_dir = Path(cfg.data.processed_path)
     output_dir.mkdir(parents=True, exist_ok=True)
     
-    # Save chunks
     chunks_data = [{"id": c.chunk_id, "text": c.text, **c.metadata} 
                   for c in all_chunks]
-    RALFSDataManager.save_json(chunks_data, output_dir / "chunks.json")
+    output_path = output_dir / f"{cfg.data.dataset}_chunks.json"
+    RALFSDataManager.save_json(chunks_data, output_path)
     
-    logger.info(f"✅ Preprocessing complete: {len(all_chunks)} chunks saved")
+    logger.info(f"✅ Preprocessing complete: {len(all_chunks)} chunks saved to {output_path}")

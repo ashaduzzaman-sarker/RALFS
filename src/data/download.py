@@ -2,73 +2,106 @@
 RALFS Dataset Download Utilities."""
 from __future__ import annotations
 
-from datasets import load_dataset
-from typing import Dict, List, Optional
+from datasets import load_dataset, Dataset
+from typing import Dict, List, Optional, Any
 from src.utils.logging import get_logger
-import hydra.utils as hu
-
 from pathlib import Path
+
 logger = get_logger(__name__)
 
 
-
 class DatasetDownloader:
-    """Download and cache RALFS benchmark datasets."""
+    """
+    Unified downloader for all RALFS benchmark datasets.
+    Supports GovReport, arXiv, BookSum, PubMed, QMSum — all used in top papers.
+    """
     
-    SUPPORTED_DATASETS: Dict[str, Dict[str, str]] = {
-        "govreport": {
-            "name": "csebuetnlp/xlsum", 
-            "subset": "govreport"
+    # FULLY CORRECTED — based on your exact spec
+    SUPPORTED_DATASETS: Dict[str, Dict[str, Any]] = {
+        "booksum": {
+            "hf_name": "kmfoda/booksum",
+            "config": None,
+            "text_key": "chapter",
+            "summary_key": "summary",
+            "domain": "literature"
         },
         "arxiv": {
-            "name": "scientific_papers", 
-            "subset": "arxiv"
+            "hf_name": "ccdv/arxiv-summarization",
+            "config": "document",
+            "text_key": "article",
+            "summary_key": "abstract",
+            "domain": "scientific"
         },
-        "booksum": {
-            "name": "booksum", 
-            "subset": "all"
+        "govreport": {
+            "hf_name": "ccdv/govreport-summarization",
+            "config": None,  # Works perfectly without config
+            "text_key": "report",
+            "summary_key": "summary",
+            "domain": "government"
         },
-        "multi_news": {
-            "name": "multi_news", 
-            "subset": "train"
+        "pubmed": {
+            "hf_name": "ccdv/pubmed-summarization",
+            "config": "document",
+            "text_key": "article",
+            "summary_key": "abstract",
+            "domain": "biomedical"
+        },
+        "qmsum": {
+            "hf_name": "pszemraj/qmsum-cleaned",
+            "config": None,
+            "text_key": "input",
+            "summary_key": "output",
+            "domain": "meeting"
         }
     }
-    
+
     @classmethod
-    def download(cls, dataset_name: str, split: str = "train", 
-                 max_samples: Optional[int] = None) -> Dict[str, List[str]]:
-        """Download dataset and return document chunks.
+    def download(
+        cls,
+        dataset_name: str,
+        split: str = "train",
+        max_samples: Optional[int] = None
+    ) -> Dict[str, List[dict]]:
+        """Download and return list of documents with metadata."""
         
-        Args:
-            dataset_name: Dataset identifier
-            split: Dataset split (train/val/test)
-            max_samples: Maximum samples for experimentation
-            
-        Returns:
-            Dictionary with document texts
-        """
         if dataset_name not in cls.SUPPORTED_DATASETS:
-            raise ValueError(f"Unsupported dataset: {dataset_name}")
-        
-        config = cls.SUPPORTED_DATASETS[dataset_name]
-        logger.info(f"Downloading {dataset_name} ({split} split)")
-        
-        dataset = load_dataset(config["name"], config["subset"], split=split)
-        
+            available = ", ".join(cls.SUPPORTED_DATASETS.keys())
+            raise ValueError(f"Dataset '{dataset_name}' not supported. Choose from: {available}")
+
+        cfg = cls.SUPPORTED_DATASETS[dataset_name]
+        logger.info(f"Downloading {dataset_name.upper()} from {cfg['hf_name']} (split={split})")
+
+        try:
+            if cfg["config"] is not None:
+                dataset: Dataset = load_dataset(cfg["hf_name"], cfg["config"], split=split)
+            else:
+                dataset: Dataset = load_dataset(cfg["hf_name"], split=split)
+        except Exception as e:
+            logger.error(f"Failed to load {dataset_name}: {e}")
+            raise
+
         if max_samples:
             dataset = dataset.select(range(min(max_samples, len(dataset))))
-        
+
         documents = []
+        text_key = cfg["text_key"]
+        summary_key = cfg["summary_key"]
+
         for i, example in enumerate(dataset):
-            # Extract full document text
-            doc_text = example.get("document", example.get("text", ""))
-            if doc_text:
-                documents.append({
-                    "id": f"{dataset_name}_{split}_{i}",
-                    "text": doc_text,
-                    "summary": example.get("summary", ""),
-                    "title": example.get("title", "")
-                })
-        
-        logger.info(f"Downloaded {len(documents)} documents")
+            doc_text = example.get(text_key, "")
+            summary = example.get(summary_key, "")
+            
+            if not doc_text.strip():
+                continue  # Skip empty
+
+            documents.append({
+                "id": f"{dataset_name}_{split}_{i}",
+                "text": str(doc_text),
+                "summary": str(summary),
+                "title": example.get("title", example.get("book_title", f"Doc {i}")),
+                "domain": cfg["domain"],
+                "source": dataset_name
+            })
+
+        logger.info(f"Successfully downloaded {len(documents)} documents from {dataset_name}")
         return {"documents": documents}
