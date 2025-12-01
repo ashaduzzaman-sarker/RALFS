@@ -8,6 +8,7 @@ poetry run python -m src.cli \
     data.max_samples=1000 \
     data.chunk_size=512 \
     data.overlap=128 \
-    data.dataset=govreport
-
+    data.dataset=govreport \
+    --config-path ../configs/train \
+    --config-name fid_base
 echo "Preprocessing Complete! Chunks saved to data/processed/govreport_chunks.json"
