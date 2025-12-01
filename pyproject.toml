@@ -21,7 +21,7 @@ nltk = "^3.9"
 spacy = { version = "^3.7.2", optional = true }
 rouge-score = "^0.1.2"
 evaluate = "^0.4.2"
-huggingface-hub = "0.39.4"
+huggingface-hub = "<1.0"
 
 
 [tool.poetry.extras]
