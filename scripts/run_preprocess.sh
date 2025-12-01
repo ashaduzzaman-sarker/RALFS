@@ -10,4 +10,4 @@ poetry run python -m src.cli \
     data.overlap=128 \
     data.dataset=govreport
 
-echo "Preprocessing Complete! Chunks saved to data/raw/processed/chunks.json"
+echo "Preprocessing Complete! Chunks saved to data/processed/govreport_chunks.json"
