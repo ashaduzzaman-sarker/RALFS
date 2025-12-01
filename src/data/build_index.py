@@ -12,7 +12,9 @@ from src.utils.io import RALFSDataManager
 from src.data.preprocess import SemanticChunker
 
 
+from pathlib import Path
 logger = get_logger(__name__)
+
 
 
 def build_faiss_index(cfg: DictConfig) -> None:
