@@ -1,5 +1,6 @@
 from src.retriever.encoder import RALFSEncoder
 from src.utils.io import RALFSDataManager
+from src.utils.logging import get_logger
 from pathlib import Path
 import faiss
 
