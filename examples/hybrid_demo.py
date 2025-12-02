@@ -5,7 +5,7 @@ from src.utils.io import RALFSDataManager
 from pathlib import Path
 
 # Load chunks
-metadata = RALFSDataManager.load_json("data/index/faiss.index.metadata.json")
+metadata = RALFSDataManager.load_json("data/index/faiss.metadata.json")
 chunks = metadata["texts"]
 
 # Initialize systems
