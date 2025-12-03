@@ -24,7 +24,7 @@ class FiDDataset(Dataset):
 
     def __getitem__(self, idx):
         item = self.data[idx]
-        query = item["article"][:2000]  # Use first 2000 chars
+        query = item["article"][:1000]  # Use first 1000 chars
         summary = item["abstract"]
 
         try:
