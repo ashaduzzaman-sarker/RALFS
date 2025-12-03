@@ -56,8 +56,8 @@ class HybridRetriever:
         # Top-k
         ranked = sorted(fused.items(), key=lambda x: -x[1])[:k_final]
         results = [
-            {"text": text, "score": float(score), "rank": i + 1}
-            for i, (text, score) in enumerate(ranked)
-        ]
+                    {"text": text, "score": float(score), "rank": i + 1}
+                    for i, (text, score) in enumerate(ranked)
+                ]
         logger.info(f"Hybrid retrieval — Final top-{k_final} fused from {k_dense}+{k_bm25}")
         return results
