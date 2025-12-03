@@ -1,4 +1,3 @@
-# src/training/trainer.py
 import torch
 from torch.utils.data import DataLoader
 from transformers import T5ForConditionalGeneration, T5TokenizerFast
@@ -32,7 +31,28 @@ class FiDTrainer:
 
             inputs = []
             for q, passages in zip(queries, passages_list):
-                ctx = " [SEP] ".join([p.get("text", "")[:500] for p in passages[:20]])
+                # Ensure passages is a list of items, even if it's None or a single dict
+                if not isinstance(passages, list):
+                    passages = [passages] if passages is not None else []
+
+                processed_texts = []
+                for p in passages[:20]: # Limit to top 20 passages
+                    current_text = ""
+                    if isinstance(p, dict):
+                        # Retrieve 'text' field, handling if it's a list or not a string
+                        text_from_p = p.get("text", "")
+                        if isinstance(text_from_p, list):
+                            current_text = " ".join(text_from_p) # Join list elements into a single string
+                        else:
+                            current_text = str(text_from_p) # Ensure it's a string
+                    elif isinstance(p, str): # Handle cases where p itself is a string
+                        current_text = p
+                    else: # Fallback for any other unexpected type for p
+                        current_text = str(p)
+
+                    processed_texts.append(current_text[:500]) # Truncate and add to list
+
+                ctx = " [SEP] ".join(processed_texts)
                 inputs.append(f"question: {q} context: {ctx}")
 
             encodings = self.tokenizer(
