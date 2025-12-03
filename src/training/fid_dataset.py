@@ -6,7 +6,7 @@ from src.utils.io import RALFSDataManager
 
 class FiDDataset(Dataset):
     def __init__(self, split="train"):
-        self.data = load_dataset("allenai/gov_report", split=split)
+        self.data = load_dataset("ccdv/arxiv-summarization", split=split)
         # Load chunks exactly like in Phase 2
         metadata = RALFSDataManager.load_json("data/index/faiss.metadata.json")
         self.chunks = metadata["texts"]
