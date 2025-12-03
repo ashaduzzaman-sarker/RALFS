@@ -32,7 +32,7 @@ class FiDTrainer:
 
             inputs = []
             for q, passages in zip(queries, passages_list):
-                ctx = " [SEP] ".join([p["text"][:500] for p in passages[:20]])
+                ctx = " [SEP] ".join([p.get("text", "")[:500] for p in passages[:20]])
                 inputs.append(f"question: {q} context: {ctx}")
 
             encodings = self.tokenizer(
