@@ -5,7 +5,7 @@ echo "Running RALFS Preprocessing Pipeline"
 
 poetry run python -m src.cli \
     task=preprocess \
-    data.max_samples=1000 \
+    data.max_samples=15 \    # 1000
     data.chunk_size=512 \
     data.overlap=128 \
     data.dataset=govreport \
