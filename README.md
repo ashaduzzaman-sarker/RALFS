@@ -1,5 +1,5 @@
 # RALFS — Retrieval-Augmented Long-Form Summarization
-`**Under Developement**`
+**[Under Developement]**
 
 **Novel hybrid retrieval and adaptive decoding for long-document summarization**  
 ![RALFS](https://img.shields.io/badge/RALFS-v4.0-blue) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Tests](https://img.shields.io/badge/tests-95%25-green)
@@ -27,64 +27,78 @@ ralfs task=evaluate
 ### Project Structure
 
 ```
-
-RALFS/\
-├── pyproject.toml\
-├── README.md\
-├── configs/\
-│ ├── train/\
-│ │ ├── fid_base.yaml\
-│ │ ├── retriever.yaml\
-│ │ └── reranker.yaml\
-│ └── eval/\
-│ └── eval.yaml\
-├── src/\
-│ ├── data/\
-│ │ ├── download.py\
-│ │ ├── preprocess.py\
-│ │ ├── build_index.py\
-│ │ └── dataset.py\
-│ ├── retriever/\
-│ │ ├── encoder.py\
-│ │ ├── contriever.py\
-│ │ ├── train_retriever.py\
-│ │ └── utils.py\
-│ ├── reranker/\
-│ │ ├── cross_encoder.py\
-│ │ └── train_reranker.py\
-│ ├── generator/\
-│ │ ├── fid_model.py\
-│ │ ├── adaptive_fid.py\
-│ │ ├── train_generator.py\
-│ │ └── inference.py\
-│ ├── faithfulness/\
-│ │ ├── egf_checker.py\
-│ │ ├── qa_checker.py\
-│ │ └── loss.py\
-│ ├── eval/\
-│ │ ├── metrics.py\
-│ │ ├── comprehensive_metrics.py\
-│ │ └── human_eval_tools.py\
-│ ├── utils/\
-│ │ ├── logging.py\
-│ │ ├── io.py\
-│ │ └── config.py\
-│ └── cli.py\
-├── scripts/\
-│ ├── run_train_retriever.sh\
-│ ├── run_train_generator.sh\
-│ └── run_eval.sh\
-├── tests/\
-│ ├── test_chunker.py\
-│ ├── test_retriever.py\
-│ └── test_generator.py\
-├── notebooks/\
-│ ├── exploration.ipynb\
-│ └── ablation_analysis.ipynb\
-├── examples/\
-│ └── demo_inference.py\
-└── docker/\
-└── Dockerfile
+RALFS/
+├── src/
+│   └── ralfs/                         
+│       ├── __init__.py
+│       ├── core/
+│       │   ├── __init__.py
+│       │   ├── config.py              
+│       │   ├── logging.py            
+│       │   └── constants.py
+│       ├── data/
+│       │   ├── __init__.py
+│       │   ├── downloader.py
+│       │   ├── chunker.py
+│       │   ├── processor.py
+│       │   └── datasets.py
+│       ├── retriever/
+│       │   ├── __init__.py
+│       │   ├── base.py
+│       │   ├── dense.py
+│       │   ├── sparse.py
+│       │   ├── colbert.py
+│       │   ├── hybrid.py
+│       │   └── reranker.py
+│       ├── generator/
+│       │   ├── __init__.py
+│       │   ├── fid.py
+│       │   └── adaptive.py
+│       ├── evaluation/
+│       │   ├── __init__.py
+│       │   ├── metrics.py
+│       │   ├── faithfulness.py
+│       │   └── human.py
+│       └── training/
+│           ├── __init__.py
+│           ├── trainer.py
+│           └── dataset.py
+├── configs/
+│   ├── data/
+│   │   └── default.yaml
+│   ├── retriever/
+│   │   └── hybrid.yaml
+│   ├── generator/
+│   │   └── fid.yaml
+│   └── train/
+│       └── default.yaml
+├── scripts/
+│   ├── preprocess.sh
+│   ├── build_index.sh
+│   ├── train.sh
+│   ├── generate.sh
+│   └── evaluate.sh
+├── examples/
+│   ├── retrieval_demo.ipynb
+│   └── full_pipeline_demo.ipynb
+├── tests/
+│   ├── test_chunker.py
+│   ├── test_hybrid.py
+│   └── test_faithfulness.py
+├── paper/
+│   ├── main.tex
+│   └── figures/
+├── results/
+├── checkpoints/
+├── data/
+│   ├── raw/
+│   ├── processed/
+│   └── index/
+├── pyproject.toml
+├── README.md
+├── LICENSE
+├── CITATION.cff
+└── ralfs.yaml                     
 ```
 
 ### Results (ACL 2026 Baseline)
