@@ -1,0 +1,8 @@
+defaults:
+  - data: default
+  - retriever: hybrid
+  - generator: fid
+  - train: default
+  - _self_
+
+task: train
