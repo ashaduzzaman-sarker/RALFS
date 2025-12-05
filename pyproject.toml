@@ -9,6 +9,9 @@ homepage = "https://github.com/ashaduzzaman-sarker/RALFS"
 repository = "https://github.com/ashaduzzaman-sarker/RALFS"
 packages = [{ include = "ralfs", from = "src" }]
 
+[tool.poetry.scripts]
+ralfs = "ralfs.cli:main"
+
 [tool.poetry.dependencies]
 python = ">=3.10,<3.13"
 torch = "^2.4.0"
