@@ -1,0 +1,5 @@
+# configs/data/default.yaml
+dataset: "arxiv"  # arxiv, govreport, booksum
+max_samples: null
+chunk_size: 512
+overlap: 128
