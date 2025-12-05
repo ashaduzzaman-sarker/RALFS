@@ -3,6 +3,14 @@ import json
 from pathlib import Path
 from typing import Any
 
+def load_json(path: Path | str, as_jsonl: bool = False) -> Any:
+    path = Path(path)
+    with open(path, "r", encoding="utf-8") as f:
+        if as_jsonl:
+            return [json.loads(line) for line in f]
+        else:
+            return json.load(f)
+
 def save_json(data: Any, path: Path | str, as_jsonl: bool = False) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
