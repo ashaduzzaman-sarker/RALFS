@@ -43,6 +43,6 @@ def run_preprocessing(cfg) -> None:
     # 3. Save
     PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
     out_path = PROCESSED_DIR / f"{dataset_name}_chunks.jsonl"
-    save_json(all_chunks, out_path, as_jsonl=True)
+    save_json([chunk.to_dict() for chunk in all_chunks], out_path, as_jsonl=True)
 
     logger.info(f"Saved {len(all_chunks)} chunks → {out_path}")

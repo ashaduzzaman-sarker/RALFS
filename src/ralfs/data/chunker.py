@@ -1,7 +1,7 @@
 # src/ralfs/data/chunker.py
 from __future__ import annotations
-from dataclasses import dataclass
-from typing import List, Dict
+from dataclasses import dataclass, asdict
+from typing import List, Dict, Any
 import nltk
 import re
 from ralfs.core.logging import get_logger
@@ -19,6 +19,10 @@ class Chunk:
     end_char: int
     metadata: Dict[str, Any]
 
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to JSON-serializable dict"""
+        return asdict(self)
+
 class SemanticChunker:
     def __init__(self, chunk_size: int = 512, overlap: int = 128):
         self.chunk_size = chunk_size
@@ -26,8 +30,7 @@ class SemanticChunker:
         self.tokenizer = nltk.sent_tokenize
 
     def _clean_text(self, text: str) -> str:
-        text = re.sub(r'\s+', ' ', text)
-        return text.strip()
+        return re.sub(r'\s+', ' ', text.strip())
 
     def chunk(self, text: str, doc_id: str) -> List[Chunk]:
         text = self._clean_text(text)
