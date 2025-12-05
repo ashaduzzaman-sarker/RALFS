@@ -1,29 +1,23 @@
 # src/ralfs/data/chunker.py
 from __future__ import annotations
 from dataclasses import dataclass
-from typing import List
+from typing import List, Dict
 import nltk
 import re
 from ralfs.core.logging import get_logger
 
 logger = get_logger(__name__)
 nltk.download('punkt', quiet=True)
+nltk.download('punkt_tab', quiet=True)
 
-@dataclass Chunk:
+@dataclass
+class Chunk:
     text: str
     chunk_id: str
     doc_id: str
     start_char: int
     end_char: int
-    metadata: dict
-
-    def __init__(self, text: str, chunk_id: str, doc_id: str, start: int, end: int, metadata: dict):
-        self.text = text
-        self.chunk_id = chunk_id
-        self.doc_id = doc_id
-        self.start_char = start
-        self.end_char = end
-        self.metadata = metadata
+    metadata: Dict[str, Any]
 
 class SemanticChunker:
     def __init__(self, chunk_size: int = 512, overlap: int = 128):
@@ -31,11 +25,15 @@ class SemanticChunker:
         self.overlap = overlap
         self.tokenizer = nltk.sent_tokenize
 
+    def _clean_text(self, text: str) -> str:
+        text = re.sub(r'\s+', ' ', text)
+        return text.strip()
+
     def chunk(self, text: str, doc_id: str) -> List[Chunk]:
-        text = re.sub(r'\s+', ' ', text.strip())
+        text = self._clean_text(text)
         sentences = self.tokenizer(text)
-        chunks = []
-        current = []
+        chunks: List[Chunk] = []
+        current: List[str] = []
         current_tokens = 0
         start_pos = 0
 
@@ -51,11 +49,11 @@ class SemanticChunker:
                     end_char=start_pos + len(chunk_text),
                     metadata={}
                 ))
-                # Overlap: keep last 2 sentences
+                # Overlap
                 overlap_text = " ".join(current[-2:])
                 current = current[-2:]
                 current_tokens = len(overlap_text.split())
-                start_pos += len(chunk_text) - len(overlap_text) + 1
+                start_pos += len(chunk_text) - len(overlap_text)
             current.append(sent)
             current_tokens += sent_tokens
 
@@ -69,4 +67,6 @@ class SemanticChunker:
                 end_char=len(text),
                 metadata={}
             ))
+
+        logger.info(f"Chunked {doc_id} → {len(chunks)} chunks")
         return chunks
