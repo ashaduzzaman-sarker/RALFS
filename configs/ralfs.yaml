@@ -5,4 +5,4 @@ defaults:
   - train: default
   - _self_
 
-task: train
+task: "preprocess"  # default task
