@@ -4,6 +4,7 @@ import hydra
 from omegaconf import DictConfig
 from ralfs.core.logging import get_logger
 
+
 log = get_logger()
 
 @hydra.main(config_path="../configs", config_name="ralfs", version_base="1.3")

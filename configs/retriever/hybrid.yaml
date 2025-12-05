@@ -20,3 +20,4 @@ reranker:
 
 index_path: "data/index/faiss.index"
 chunks_path: "data/processed/${data.dataset}_chunks.jsonl"
+
