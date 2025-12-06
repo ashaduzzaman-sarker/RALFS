@@ -1,5 +1,4 @@
-data:
-  dataset: "arxiv"                    # arxiv | govreport | booksum
-  max_samples: null                   # Set via CLI for debugging
-  chunk_size: 512
-  overlap: 128
+dataset: "arxiv"                    # arxiv | govreport | booksum
+max_samples: null                   # Set via CLI for debugging
+chunk_size: 512
+overlap: 128

@@ -30,9 +30,14 @@ class DenseRetriever(BaseRetriever):
         logger.info(f"DenseRetriever loaded {len(self.chunks)} passages")
 
     def retrieve(self, query: str, k: int | None = None) -> List[Dict]:
-        k = min(k or self.cfg.k, self.index.ntotal)
+        if self.index is None:
+            raise RuntimeError("Call load_index() first")
+
+        k = k or self.cfg.k
+        k = min(k, self.index.ntotal)  # ← THIS IS THE CORRECT LINE
+
         q_emb = self.model.encode([query], normalize_embeddings=True)
-        scores, indices = self.index.search(q_emb.astype('float32'), k * 3)  # overfetch
+        scores, indices = self.index.search(q_emb.astype('float32'), k)
 
         results = []
         seen = set()
@@ -48,10 +53,4 @@ class DenseRetriever(BaseRetriever):
                 "score": float(score),
                 "rank": len(results) + 1
             })
-            if len(results) >= k:
-                break
         return results
-
-# In dense.py, in retrieve():
-k = min(k or self.cfg.k, self.index.ntotal)  # Safe k
-scores, indices = self.index.search(q_emb.astype('float32'), k)
