@@ -1,9 +1,10 @@
-model:
-  name: "google/flan-t5-large"
-  batch_size: 1
-  grad_accum: 4
-  epochs: 1
-  lr: 1e-4
+train:
+  model:
+    name: "google/flan-t5-large"
+    batch_size: 1
+    grad_accum: 4
+    epochs: 1
+    lr: 1e-4
 
-training:
-  output_dir: "checkpoints/debug"
+  training:
+    output_dir: "checkpoints/debug"

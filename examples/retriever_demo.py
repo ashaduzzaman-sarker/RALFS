@@ -1,12 +1,14 @@
-# examples/retriever_demo.py
+import hydra
+from omegaconf import DictConfig
 from ralfs.retriever.factory import create_retriever
-from ralfs.core.config import load_config
 from ralfs.core.logging import get_logger
+
 
 log = get_logger()
 
-def main():
-    cfg = load_config()
+@hydra.main(config_path="../configs", config_name="ralfs", version_base="1.3")
+def main(cfg: DictConfig):
+
     retriever = create_retriever(cfg)
 
     queries = [

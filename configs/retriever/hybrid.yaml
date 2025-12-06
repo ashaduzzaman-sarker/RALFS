@@ -1,23 +1,23 @@
-dense:
-  model: "sentence-transformers/all-MiniLM-L12-v2"
-  k: 100
+retriever:
+  dense:
+    model: "sentence-transformers/all-MiniLM-L12-v2"
+    k: 100
 
-sparse:
-  k: 100
+  sparse:
+    k: 100
 
-colbert:
-  model: "colbert-ir/colbertv2.0"
-  k: 100
+  colbert:
+    model: "colbert-ir/colbertv2.0"
+    k: 100
 
-fusion:
-  alpha: 0.4      # dense
-  beta: 0.4       # bm25
-  gamma: 0.2      # colbert
+  fusion:
+    alpha: 0.4
+    beta: 0.4
+    gamma: 0.2
 
-reranker:
-  model: "cross-encoder/ms-marco-MiniLM-L-12-v2"
-  top_k: 20
+  reranker:
+    model: "cross-encoder/ms-marco-MiniLM-L-12-v2"
+    top_k: 20
 
-index_path: "data/index/faiss.index"
-chunks_path: "data/processed/${data.dataset}_chunks.jsonl"
-
+  index_path: "data/index/faiss.index"
+  chunks_path: "data/processed/${data.dataset}_chunks.jsonl"
