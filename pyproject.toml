@@ -28,6 +28,8 @@ rouge-score = "^0.1.2"
 bert-score = "^0.3.13"
 evaluate = "^0.4.2"
 
+colbert-ai = {git = "https://github.com/stanford-futuredata/ColBERT.git", branch = "main"}
+
 [tool.poetry.extras]
 
 [tool.poetry.scripts]
