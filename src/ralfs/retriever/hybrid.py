@@ -10,11 +10,6 @@ from ralfs.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-def rank_normalize(scores: List[float]) -> List[float]:
-    """Rank-based normalization: 1/(rank+60) — standard in hybrid search"""
-    ranks = np.argsort(np.argsort(scores))[::-1] + 1  # 1 = best
-    return [1.0 / (60 + r) for r in ranks]
-
 class HybridRetriever:
     def __init__(self, cfg):
         self.cfg = cfg.retriever
@@ -34,32 +29,36 @@ class HybridRetriever:
         self.colbert.load_index(cfg)
 
     def retrieve(self, query: str) -> List[Dict]:
-        k = 100  # overfetch
-        
         # 1. Retrieve from each
-        dense_results = self.dense.retrieve(query, k=k)
-        sparse_results = self.sparse.retrieve(query, k=k)
-        colbert_results = self.colbert.retrieve(query, k=k)
+        dense = self.dense.retrieve(query, k=self.cfg.dense.k)
+        sparse = self.sparse.retrieve(query, k=self.cfg.sparse.k)
+        colbert = self.colbert.retrieve(query, k=self.cfg.colbert.k)
 
-        # 2. Rank-based fusion (RRF) — this is the GOLD STANDARD
-        all_results = [dense_results, sparse_results, colbert_results]
+        # 2. Normalize and fuse
+        def normalize(scores: List[float]) -> List[float]:
+            s = np.array(scores)
+            return (s - s.min()) / (s.max() - s.min() + 1e-8)
+
         fused = {}
-        for rank_offset, results in enumerate(all_results):
-            for rank, doc in enumerate(results):
-                text = doc["text"]
-                if text not in fused:
-                    fused[text] = 0
-                # RRF formula
-                fused[text] += 1 / (60 + rank + 1)
+        for r in dense:
+            fused[r["text"]] = fused.get(r["text"], 0) + self.cfg.fusion.alpha * normalize([r["score"]])[0]
+        for r in sparse:
+            fused[r["text"]] = fused.get(r["text"], 0) + self.cfg.fusion.beta * normalize([r["score"]])[0]
+        for r in colbert:
+            fused[r["text"]] = fused.get(r["text"], 0) + self.cfg.fusion.gamma * normalize([r["score"]])[0]
 
-        # 3. Top candidates for reranking
+        # 3. Top candidates
         top_candidates = [
             {"text": text, "score": score}
             for text, score in sorted(fused.items(), key=lambda x: -x[1])[:50]
         ]
 
-        # 4. Final reranking
+        # 4. Rerank and normalize final scores to [0,1]
         final = self.reranker.rerank(query, top_candidates, top_k=self.cfg.reranker.top_k)
+        final_scores = [r["score"] for r in final]
+        norm_scores = normalize(final_scores)
+        for i, r in enumerate(final):
+            r["score"] = norm_scores[i]
 
-        logger.info(f"Hybrid RRF + Rerank → Retrieved top-{len(final)} for '{query}'")
+        logger.info(f"Hybrid + Rerank → Retrieved top-{len(final)} for '{query}'")
         return final
