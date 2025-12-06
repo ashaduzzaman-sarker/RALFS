@@ -27,8 +27,7 @@ spacy = "^3.7.5"
 rouge-score = "^0.1.2"
 bert-score = "^0.3.13"
 evaluate = "^0.4.2"
-
-colbert-ai = {git = "https://github.com/stanford-futuredata/ColBERT.git", branch = "main"}
+colbert-ai = "^0.2.1"
 
 [tool.poetry.extras]
 
