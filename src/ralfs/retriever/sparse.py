@@ -18,7 +18,7 @@ class SparseRetriever(BaseRetriever):
         pass
 
     def retrieve(self, query: str, k: int | None = None) -> List[Dict]:
-        k = k or self.cfg.k
+        k = min(k or self.cfg.k, len(self.chunks))
         scores = self.bm25.get_scores(query.split())
         top_idx = scores.argsort()[::-1][:k]
         return [
@@ -29,3 +29,4 @@ class SparseRetriever(BaseRetriever):
             }
             for rank, i in enumerate(top_idx, 1)
         ]
+    

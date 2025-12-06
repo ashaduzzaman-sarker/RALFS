@@ -28,16 +28,17 @@ class HybridRetriever:
         self.colbert.load_index(cfg)
 
     def retrieve(self, query: str) -> List[Dict]:
-        # 1. Get candidates
-        dense = self.dense.retrieve(query, k=self.cfg.dense.k)
-        sparse = self.sparse.retrieve(query, k=self.cfg.sparse.k)
-        colbert = self.colbert.retrieve(query, k=self.cfg.colbert.k)
-
-        # 2. Fuse
+        # Safe k values
+        k_dense = min(self.cfg.dense.k, len(self.chunks))
+        k_sparse = min(self.cfg.sparse.k, len(self.chunks))
+        k_colbert = min(self.cfg.colbert.k, len(self.chunks))
+        
+        dense = self.dense.retrieve(query, k=k_dense)
+        sparse = self.sparse.retrieve(query, k=k_sparse)
+        colbert = self.colbert.retrieve(query, k=k_colbert)  # Now safe
+        
+        # Rest unchanged
         fused = reciprocal_rank_fusion([dense, sparse, colbert])
-
-        # 3. Rerank
-        final = self.reranker.rerank(query, fused, top_k=self.cfg.reranker.top_k)
-
-        logger.info(f"Hybrid + Rerank → Retrieved top-{len(final)}")
+        final = self.reranker.rerank(query, fused, top_k=min(self.cfg.reranker.top_k, len(fused)))
+        
         return final

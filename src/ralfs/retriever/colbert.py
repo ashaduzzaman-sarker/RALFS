@@ -37,16 +37,18 @@ class ColbertRetriever(BaseRetriever):
             torch.save(self.doc_embs, cache_path)
         logger.info(f"ColBERT loaded {len(self.chunks)} passages")
 
+
     def retrieve(self, query: str, k: int | None = None) -> List[Dict]:
-        k = k or self.cfg.k
-        q_emb = self.model.encode(query, convert_to_tensor=True)
-        scores = util.cos_sim(q_emb, self.doc_embs)[0]
-        top_k = torch.topk(scores, k)
-        return [
-            {
-                "text": self.chunks[i],
-                "score": float(scores[i]),
-                "rank": rank
-            }
-            for rank, i in enumerate(top_k.indices, 1)
-        ]
+            k = min(k or self.cfg.k, len(self.chunks)) 
+            q_emb = self.model.encode(query, convert_to_tensor=True)
+            scores = util.cos_sim(q_emb, self.doc_embs)[0]  
+            scores = scores.flatten()  
+            top_k = torch.topk(scores, k)  
+            return [
+                {
+                    "text": self.chunks[i],
+                    "score": float(scores[i]),
+                    "rank": rank
+                }
+                for rank, i in enumerate(top_k.indices, 1)
+            ]

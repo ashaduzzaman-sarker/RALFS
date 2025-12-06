@@ -1,9 +1,8 @@
-generator:
-  model:
-    name: "google/flan-t5-large"
-    max_input_length: 1024
-    max_output_length: 512
+model:
+  name: "google/flan-t5-large"
+  max_input_length: 1024
+  max_output_length: 512
 
-  adaptive:
-    min_k: 5
-    max_k: 40
+adaptive:
+  min_k: 5
+  max_k: 40

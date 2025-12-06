@@ -30,7 +30,7 @@ class DenseRetriever(BaseRetriever):
         logger.info(f"DenseRetriever loaded {len(self.chunks)} passages")
 
     def retrieve(self, query: str, k: int | None = None) -> List[Dict]:
-        k = k or self.cfg.k
+        k = min(k or self.cfg.k, self.index.ntotal)
         q_emb = self.model.encode([query], normalize_embeddings=True)
         scores, indices = self.index.search(q_emb.astype('float32'), k * 3)  # overfetch
 
@@ -51,3 +51,7 @@ class DenseRetriever(BaseRetriever):
             if len(results) >= k:
                 break
         return results
+
+# In dense.py, in retrieve():
+k = min(k or self.cfg.k, self.index.ntotal)  # Safe k
+scores, indices = self.index.search(q_emb.astype('float32'), k)
