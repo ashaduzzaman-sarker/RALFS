@@ -8,7 +8,7 @@ log = get_logger()
 
 @hydra.main(config_path="../../configs", config_name="ralfs", version_base="1.3")
 def main(cfg: DictConfig) -> None:
-    log.info("RALFS v4.0 — Starting task: [bold green]%s[/]", cfg.task)
+    log.info("RALFS v1.0 — Starting task: [bold green]%s[/]", cfg.task)
 
     if cfg.task == "preprocess":
         from ralfs.data.processor import run_preprocessing
