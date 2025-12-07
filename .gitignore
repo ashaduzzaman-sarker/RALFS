@@ -3,6 +3,8 @@ data/raw/
 data/processed/
 data/index/
 results/
+outputs/
+.lock
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
