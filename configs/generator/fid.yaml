@@ -2,7 +2,9 @@ model:
   name: "google/flan-t5-large"
   max_input_length: 1024
   max_output_length: 512
+  num_beams: 4
 
 adaptive:
   min_k: 5
   max_k: 40
+  drop_threshold: 0.05

@@ -31,6 +31,7 @@ RALFS/
 ├── src/
 │   └── ralfs/                         
 │       ├── __init__.py
+│       ├── cli.py
 │       ├── core/
 │       │   ├── __init__.py
 │       │   ├── config.py              
@@ -41,7 +42,7 @@ RALFS/
 │       │   ├── downloader.py
 │       │   ├── chunker.py
 │       │   ├── processor.py
-│       │   └── datasets.py
+│       │   └── indexer.py
 │       ├── retriever/
 │       │   ├── __init__.py
 │       │   ├── base.py
@@ -49,6 +50,8 @@ RALFS/
 │       │   ├── sparse.py
 │       │   ├── colbert.py
 │       │   ├── hybrid.py
+│       │   ├── factory.py
+│       │   ├── utils.py
 │       │   └── reranker.py
 │       ├── generator/
 │       │   ├── __init__.py
@@ -70,8 +73,10 @@ RALFS/
 │   │   └── hybrid.yaml
 │   ├── generator/
 │   │   └── fid.yaml
-│   └── train/
-│       └── default.yaml
+│   ├── train/
+│   │   └── default.yaml
+│   ├── ralfs.yaml
+│   └── __init__.py  
 ├── scripts/
 │   ├── preprocess.sh
 │   ├── build_index.sh
@@ -97,8 +102,7 @@ RALFS/
 ├── pyproject.toml
 ├── README.md
 ├── LICENSE
-├── CITATION.cff
-└── ralfs.yaml                     
+└── CITATION.cff                     
 ```
 
 ### Results (ACL 2026 Baseline)
