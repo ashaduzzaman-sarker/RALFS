@@ -1,4 +1,4 @@
-# src/ralfs/generator/fid.py — FINAL WORKING VERSION
+# src/ralfs/generator/fid.py
 from __future__ import annotations
 from typing import List, Dict, Tuple
 import torch

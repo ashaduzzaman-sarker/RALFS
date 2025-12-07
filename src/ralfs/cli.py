@@ -40,8 +40,15 @@ def main(cfg: DictConfig) -> None:
         print(f"\nSummary:\n{summary}")
 
     elif cfg.task == "train":
-        from ralfs.training.trainer import train
-        train(cfg)
+        from ralfs.training.dataset import FiDDataset
+        from ralfs.training.trainer import FiDTrainer
+        from torch.utils.data import DataLoader
+
+        dataset = FiDDataset(cfg, split="train")
+        dataloader = DataLoader(dataset, batch_size=cfg.train.model.batch_size, shuffle=True, num_workers=0)
+
+        trainer = FiDTrainer(cfg)
+        trainer.train(dataloader)
 
     elif cfg.task == "evaluate":
         from ralfs.evaluation.main import evaluate
