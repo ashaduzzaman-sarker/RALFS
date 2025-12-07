@@ -13,6 +13,7 @@ def main(cfg: DictConfig) -> None:
     if cfg.task == "preprocess":
         from ralfs.data.processor import run_preprocessing
         run_preprocessing(cfg)
+
     elif cfg.task == "build_index":
         from ralfs.data.indexer import build_index
         build_index(cfg)
@@ -37,12 +38,15 @@ def main(cfg: DictConfig) -> None:
         print(f"\nQuery: {cfg.query}")
         print(f"Used {stats['k_used']} passages")
         print(f"\nSummary:\n{summary}")
+
     elif cfg.task == "train":
         from ralfs.training.trainer import train
         train(cfg)
+
     elif cfg.task == "evaluate":
         from ralfs.evaluation.main import evaluate
         evaluate(cfg)
+        
     else:
         log.error("Unknown task: %s", cfg.task)
         raise ValueError("Valid tasks: preprocess, build_index, generate, train, evaluate")
