@@ -1,4 +1,4 @@
-# src/ralfs/retriever/indexer.py
+# src/ralfs/data/indexer.py
 from pathlib import Path
 import faiss
 import numpy as np
