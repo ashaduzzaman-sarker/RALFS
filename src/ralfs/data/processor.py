@@ -17,7 +17,7 @@ def run_preprocessing(cfg) -> None:
     logger.info(f"Starting preprocessing for {dataset_name}")
 
     # 1. Download
-    docs = DatasetDownloader.download(
+    docs = DatasetDownloader.download_and_save(
         dataset_name=dataset_name,
         split="train",
         max_samples=max_samples
