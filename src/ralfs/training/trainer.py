@@ -15,14 +15,12 @@ class FiDTrainer:
         self.cfg = cfg.train
         self.accelerator = Accelerator(
             mixed_precision="fp16",
-            gradient_accumulation_steps=self.cfg.grad_accum
+            gradient_accumulation_steps=self.cfg.model.grad_accum
         )
         
-        # Model & tokenizer
         self.tokenizer = AutoTokenizer.from_pretrained(self.cfg.model.name)
         self.model = AutoModelForSeq2SeqLM.from_pretrained(self.cfg.model.name)
         
-        # Apply LoRA
         lora_config = LoraConfig(
             task_type=TaskType.SEQ_2_SEQ_LM,
             r=16,
@@ -33,10 +31,7 @@ class FiDTrainer:
         )
         self.model = get_peft_model(self.model, lora_config)
         
-        # Optimizer
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.cfg.lr)
-        
-        # Prepare with accelerator
+        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.cfg.model.lr)
         self.model, self.optimizer = self.accelerator.prepare(self.model, self.optimizer)
         
         logger.info(f"FiD Trainer ready | Trainable params: {sum(p.numel() for p in self.model.parameters() if p.requires_grad):,}")
@@ -50,21 +45,39 @@ class FiDTrainer:
             summaries = batch["summary"]
             passages_list = batch["passages"]
             
-            # Build FiD inputs
             inputs = []
             for q, passages in zip(queries, passages_list):
-                ctx = " [SEP] ".join([p["text"][:400] for p in passages])
+                texts = []
+                for p in passages:
+                    if isinstance(p, dict):
+                        texts.append(p.get("text", "")[:400])
+                    elif isinstance(p, str):
+                        texts.append(p[:400])
+                    else:
+                        texts.append("")
+                ctx = " [SEP] ".join(texts)
                 inputs.append(f"question: {q} context: {ctx}")
             
-            # Tokenize
-            enc = self.tokenizer(inputs, padding=True, truncation=True, max_length=1024, return_tensors="pt")
-            labels = self.tokenizer(summaries, padding=True, truncation=True, max_length=256, return_tensors="pt").input_ids
+            enc = self.tokenizer(
+                inputs,
+                padding=True,
+                truncation=True,
+                max_length=1024,
+                return_tensors="pt"
+            )
+            labels = self.tokenizer(
+                summaries,
+                padding=True,
+                truncation=True,
+                max_length=256,
+                return_tensors="pt"
+            ).input_ids
             
             enc = {k: v.to(self.accelerator.device) for k, v in enc.items()}
             labels = labels.to(self.accelerator.device)
             
             loss = self.model(**enc, labels=labels).loss
-            loss = loss / self.cfg.grad_accum
+            loss = loss / self.cfg.model.grad_accum
             self.accelerator.backward(loss)
             total_loss += loss.item()
             
@@ -72,12 +85,12 @@ class FiDTrainer:
                 self.optimizer.step()
                 self.optimizer.zero_grad()
         
-        return total_loss * self.cfg.grad_accum / len(dataloader)
+        return total_loss * self.cfg.model.grad_accum / len(dataloader)
 
     def train(self, dataloader: DataLoader):
-        for epoch in range(self.cfg.epochs):
+        for epoch in range(self.cfg.model.epochs):
             loss = self.train_epoch(dataloader)
-            logger.info(f"Epoch {epoch+1}/{self.cfg.epochs} | Loss: {loss:.4f}")
+            logger.info(f"Epoch {epoch+1}/{self.cfg.model.epochs} | Loss: {loss:.4f}")
         
         save_path = self.cfg.training.output_dir
         self.accelerator.wait_for_everyone()
