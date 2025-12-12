@@ -7,17 +7,23 @@ logger = get_logger(__name__)
 nlp = spacy.load("en_core_web_sm", disable=["parser", "ner"])
 
 def compute_egf(gold: str, pred: str) -> float:
-    """Entity Grid Faithfulness (Barzilay & Lapata 2008)"""
+    """Entity Grid Faithfulness (Barzilay & Lapata, 2008)"""
     def get_entities(text):
-        return [[ent.text.lower() for ent in sent.ents] for sent in nlp(text).sents]
+        doc = nlp(text)
+        entities = []
+        for sent in doc.sents:
+            sent_ents = {ent.text.lower() for ent in sent.ents}
+            entities.append(sent_ents)
+        return entities
 
     gold_grid = get_entities(gold)
     pred_grid = get_entities(pred)
 
-    matched = total = 0
-    for g_sent in gold_grid:
-        total += len(g_sent)
-        for p_sent in pred_grid:
-            matched += len(set(g_sent) & set(p_sent))
+    total = 0
+    matched = 0
+    for gold_sent in gold_grid:
+        total += len(gold_sent)
+        for pred_sent in pred_grid:
+            matched += len(gold_sent & pred_sent)
 
     return matched / total if total > 0 else 0.0
