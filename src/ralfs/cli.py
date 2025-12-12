@@ -15,7 +15,8 @@ def main(cfg: DictConfig) -> None:
         run_preprocessing(cfg)
 
     elif cfg.task == "build_index":
-        from ralfs.retriever.indexer import build_index
+        # from ralfs.retriever.indexer import build_index
+        from ralfs.data.indexer import build_index
         build_index(cfg)
 
     elif cfg.task == "retrieve":
