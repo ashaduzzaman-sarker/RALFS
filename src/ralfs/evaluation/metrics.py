@@ -7,25 +7,26 @@ from ralfs.core.logging import get_logger
 
 logger = get_logger(__name__)
 
-rouge = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
-bert = load("bertscore")
+rouge_scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+bert_scorer = load("bertscore")
 
-def evaluate_predictions(preds, refs):
-    ) -> dict:
+def evaluate_predictions(predictions: List[Dict], references: List[Dict]) -> Dict:
     results = []
-    for p, r in zip(preds, refs):
-        rouge_scores = rouge.score(r["summary"], p["summary"])
-        P, R, F = bert_score([p["summary"]], [r["summary"]], lang="en", verbose=False)
-        egf = compute_egf(r["summary"], p["summary"])
+    for pred, ref in zip(predictions, references):
+        r = rouge_scorer.score(ref["summary"], pred["summary"])
+        P, R, F1 = bert_score([pred["summary"]], [ref["summary"]], lang="en", verbose=False)
+        egf = compute_egf(ref["summary"], pred["summary"])
+
         results.append({
-            "rouge1": rouge_scores["rouge1"].fmeasure,
-            "rouge2": rouge_scores["rouge2"].fmeasure,
-            "rougeL": rouge_scores["rougeL"].fmeasure,
-            "bertscore": F.mean().item(),
-            "egf": egf,
+            "rouge1": r["rouge1"].fmeasure,
+            "rouge2": r["rouge2"].fmeasure,
+            "rougeL": r["rougeL"].fmeasure,
+            "bertscore_f1": F1.mean().item(),
+            "egf": egf
         })
-    avg = {k: sum(d[k] for d in results) / len(results) for k in results[0]}
-    logger.info("=== FINAL RESULTS ===")
+
+    avg = {k: sum(r[k] for r in results) / len(results) for k in results[0]}
+    logger.info("Evaluation Results:")
     for k, v in avg.items():
-        logger.info(f"{k:12}: {v:.4f}")
+        logger.info(f"  {k.upper():12} {v:.4f}")
     return avg
