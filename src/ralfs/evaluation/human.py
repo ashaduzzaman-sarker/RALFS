@@ -1,5 +1,6 @@
 # src/ralfs/evaluation/human.py
 import csv
+from typing import List, Dict
 from pathlib import Path
 from ralfs.utils.io import load_json
 from ralfs.core.logging import get_logger
