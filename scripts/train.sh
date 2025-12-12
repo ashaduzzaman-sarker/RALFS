@@ -1,8 +1,4 @@
 #!/bin/bash
 set -e
-
 echo "Starting RALFS Training"
-
-poetry run ralfs task=train 
-
-echo "Training complete! Checkpoints saved to checkpoints/arxiv_fid"
+accelerate launch --mixed_precision=fp16 src/ralfs/training/trainer.py
