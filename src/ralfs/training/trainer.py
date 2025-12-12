@@ -3,98 +3,108 @@ from __future__ import annotations
 import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM
+from peft import get_peft_model, LoraConfig, TaskType
 from accelerate import Accelerator
 from tqdm.auto import tqdm
-from peft import LoraConfig, get_peft_model, TaskType
+from pathlib import Path
 from ralfs.core.logging import get_logger
+from ralfs.training.dataset import FiDDataset
+from ralfs.evaluation.metrics import evaluate_predictions
 
 logger = get_logger(__name__)
 
-class FiDTrainer:
-    def __init__(self, cfg):
-        self.cfg = cfg.train
-        self.accelerator = Accelerator(
-            mixed_precision="fp16",
-            gradient_accumulation_steps=self.cfg.model.grad_accum
-        )
-        
-        self.tokenizer = AutoTokenizer.from_pretrained(self.cfg.model.name)
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(self.cfg.model.name)
-        
-        lora_config = LoraConfig(
-            task_type=TaskType.SEQ_2_SEQ_LM,
-            r=16,
-            lora_alpha=32,
-            lora_dropout=0.1,
-            target_modules=["q", "v"],
-            bias="none"
-        )
-        self.model = get_peft_model(self.model, lora_config)
-        
-        self.optimizer = torch.optim.AdamW(self.model.parameters(), lr=self.cfg.model.lr)
-        self.model, self.optimizer = self.accelerator.prepare(self.model, self.optimizer)
-        
-        logger.info(f"FiD Trainer ready | Trainable params: {sum(p.numel() for p in self.model.parameters() if p.requires_grad):,}")
+def train(cfg):
+    accelerator = Accelerator(
+        mixed_precision=cfg.training.mixed_precision,
+        gradient_accumulation_steps=cfg.model.grad_accum
+    )
 
-    def train_epoch(self, dataloader: DataLoader):
-        self.model.train()
-        total_loss = 0
-        
-        for batch in tqdm(dataloader, disable=not self.accelerator.is_main_process):
-            queries = batch["query"]
-            summaries = batch["summary"]
-            passages_list = batch["passages"]
-            
-            inputs = []
-            for q, passages in zip(queries, passages_list):
-                texts = []
-                for p in passages:
-                    if isinstance(p, dict):
-                        texts.append(p.get("text", "")[:400])
-                    elif isinstance(p, str):
-                        texts.append(p[:400])
-                    else:
-                        texts.append("")
-                ctx = " [SEP] ".join(texts)
-                inputs.append(f"question: {q} context: {ctx}")
-            
-            enc = self.tokenizer(
-                inputs,
-                padding=True,
-                truncation=True,
-                max_length=1024,
-                return_tensors="pt"
-            )
-            labels = self.tokenizer(
-                summaries,
-                padding=True,
-                truncation=True,
-                max_length=256,
-                return_tensors="pt"
-            ).input_ids
-            
-            enc = {k: v.to(self.accelerator.device) for k, v in enc.items()}
-            labels = labels.to(self.accelerator.device)
-            
-            loss = self.model(**enc, labels=labels).loss
-            loss = loss / self.cfg.model.grad_accum
-            self.accelerator.backward(loss)
-            total_loss += loss.item()
-            
-            if self.accelerator.sync_gradients:
-                self.optimizer.step()
-                self.optimizer.zero_grad()
-        
-        return total_loss * self.cfg.model.grad_accum / len(dataloader)
+    # Tokenizer & model
+    tokenizer = AutoTokenizer.from_pretrained(cfg.model.name)
+    model = AutoModelForSeq2SeqLM.from_pretrained(cfg.model.name)
 
-    def train(self, dataloader: DataLoader):
-        for epoch in range(self.cfg.model.epochs):
-            loss = self.train_epoch(dataloader)
-            logger.info(f"Epoch {epoch+1}/{self.cfg.model.epochs} | Loss: {loss:.4f}")
-        
-        save_path = self.cfg.training.output_dir
-        self.accelerator.wait_for_everyone()
-        unwrapped = self.accelerator.unwrap_model(self.model)
-        unwrapped.save_pretrained(save_path)
-        self.tokenizer.save_pretrained(save_path)
-        logger.info(f"Model saved to {save_path}")
+    # LoRA
+    lora_config = LoraConfig(
+        task_type=TaskType.SEQ_2_SEQ_LM,
+        r=16,
+        lora_alpha=32,
+        target_modules=["q", "v"],
+        lora_dropout=0.05,
+        bias="none"
+    )
+    model = get_peft_model(model, lora_config)
+    model.print_trainable_parameters()
+
+    # Datasets
+    train_dataset = FiDDataset(cfg, split="train")
+    val_dataset = FiDDataset(cfg, split="validation")
+
+    train_loader = DataLoader(train_dataset, batch_size=cfg.model.batch_size, shuffle=True)
+    val_loader = DataLoader(val_dataset, batch_size=1)
+
+    optimizer = torch.optim.AdamW(model.parameters(), lr=cfg.model.lr, weight_decay=cfg.model.weight_decay)
+
+    # Prepare with accelerator
+    model, optimizer, train_loader = accelerator.prepare(model, optimizer, train_loader)
+
+    total_steps = len(train_loader) * cfg.model.epochs
+    progress_bar = tqdm(range(total_steps), disable=not accelerator.is_main_process)
+
+    best_rouge = 0.0
+    step = 0
+
+    for epoch in range(cfg.model.epochs):
+        model.train()
+        for batch in train_loader:
+            with accelerator.accumulate(model):
+                inputs = tokenizer(
+                    batch["inputs"],
+                    return_tensors="pt",
+                    padding=True,
+                    truncation=True,
+                    max_length=1024
+                ).to(accelerator.device)
+                
+                labels = tokenizer(
+                    batch["summaries"],
+                    return_tensors="pt",
+                    padding=True,
+                    truncation=True,
+                    max_length=256
+                ).input_ids.to(accelerator.device)
+
+                loss = model(**inputs, labels=labels).loss
+                accelerator.backward(loss)
+                optimizer.step()
+                optimizer.zero_grad()
+                progress_bar.update(1)
+                step += 1
+
+                if step % cfg.training.logging_steps == 0:
+                    logger.info(f"Step {step} | Loss: {loss.item():.4f}")
+
+                if step % cfg.training.eval_steps == 0:
+                    model.eval()
+                    predictions = []
+                    references = []
+                    for val_batch in val_loader:
+                        with torch.no_grad():
+                            generated = model.generate(
+                                val_batch["input_ids"].to(accelerator.device),
+                                max_length=200
+                            )
+                        pred = tokenizer.decode(generated[0], skip_special_tokens=True)
+                        predictions.append({"summary": pred})
+                        references.append({"summary": val_batch["summary"]})
+                    
+                    scores = evaluate_predictions(predictions, references)
+                    if scores["rouge2"] > best_rouge:
+                        best_rouge = scores["rouge2"]
+                        accelerator.save_state(f"{cfg.training.output_dir}/best")
+
+                    model.train()
+
+        accelerator.save_state(f"{cfg.training.output_dir}/epoch_{epoch+1}")
+
+    logger.info("Training complete!")
+    accelerator.save_state(f"{cfg.training.output_dir}/final")
