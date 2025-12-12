@@ -1,5 +1,6 @@
 # src/ralfs/evaluation/faithfulness.py
 import spacy
+from typing import List, Dict
 from collections import Counter
 from ralfs.core.logging import get_logger
 
