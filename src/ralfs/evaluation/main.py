@@ -7,7 +7,8 @@ from ralfs.core.logging import get_logger
 logger = get_logger(__name__)
 
 def evaluate(cfg):
+    # Dummy data for now — replace with real paths
     preds = load_json("results/predictions.jsonl", as_jsonl=True)
-    refs  = load_json("data/govreport/test.jsonl", as_jsonl=True)  # change path if needed
+    refs = load_json("data/govreport/test.jsonl", as_jsonl=True)[:len(preds)]
     evaluate_predictions(preds, refs)
-    create_human_eval_template("results/predictions.jsonl", n=100)
+    create_human_eval_template("results/predictions.jsonl")
