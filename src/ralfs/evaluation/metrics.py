@@ -1,6 +1,7 @@
 # src/ralfs/evaluation/metrics.py
 from rouge_score import rouge_scorer
 from evaluate import load
+from typing import List, Dict
 from bert_score import score as bert_score
 from ralfs.evaluation.faithfulness import compute_egf
 from ralfs.core.logging import get_logger
