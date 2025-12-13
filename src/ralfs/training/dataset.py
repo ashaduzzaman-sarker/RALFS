@@ -1,4 +1,4 @@
-# src/ralfs/training/dataset.py
+# src/ralfs/training/dataset.py — FINAL, USES PREPROCESSED CHUNKS + SUMMARIES
 from __future__ import annotations
 from torch.utils.data import Dataset
 from ralfs.retriever.factory import create_retriever
