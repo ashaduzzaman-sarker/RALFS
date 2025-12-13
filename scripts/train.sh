@@ -5,6 +5,7 @@ echo "Starting RALFS Training"
 echo "Dataset: ${1:-arxiv}"
 echo "Using accelerate (fp16 on T4/A100)"
 
+# poetry run ralfs task=train \
 accelerate launch \
     --mixed_precision=fp16 \
     src/ralfs/training/trainer.py \
