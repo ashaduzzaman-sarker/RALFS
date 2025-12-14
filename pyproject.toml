@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "ralfs"
 version = "1.0.0"
-description = "Retrieval-Augmented Long-Form Summarization with Hybrid Fusion and Adaptive Decoding"
+description = "Retrieval-Augmented Long-Form Summarization"
 authors = ["Ashaduzzaman Sarker <ashaduzzaman2505@gmail.com>"]
 license = "MIT"
 readme = "README.md"
