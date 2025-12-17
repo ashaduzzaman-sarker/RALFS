@@ -8,3 +8,4 @@ class BaseGenerator(ABC):
     @abstractmethod
     def generate(self, query: str, passages: List[Dict]) -> Tuple[str, Dict]:
         pass
+

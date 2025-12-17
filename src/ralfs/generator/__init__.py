@@ -1,3 +1,4 @@
+#src/ralfs/generator/__init__.py
 from .base import BaseGenerator
 from .fid import FiDGenerator
 from .factory import create_generator
