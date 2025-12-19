@@ -1,0 +1,9 @@
+defaults:
+  - default
+
+dataset: govreport
+chunk_size: 768  # Larger chunks for government reports
+overlap: 192
+chunking_strategy: semantic
+
+max_samples: 20 # null

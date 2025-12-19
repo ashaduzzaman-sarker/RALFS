@@ -1,22 +1,58 @@
-dense:
-  model: "sentence-transformers/all-MiniLM-L12-v2"
-  k: 100
+# ============================================================================
+# File: configs/retriever/hybrid.yaml
+# Hybrid retrieval configuration (Dense + Sparse + ColBERT)
+# ============================================================================
+type: hybrid  # Options: dense, sparse, colbert, hybrid
 
+# Dense retrieval (Sentence Transformers)
+dense:
+  model: sentence-transformers/all-MiniLM-L12-v2
+  # Alternative: sentence-transformers/all-mpnet-base-v2 (better quality)
+  k: 100
+  batch_size: 32
+  normalize: true  # L2 normalize embeddings
+
+# Sparse retrieval (BM25)
 sparse:
   k: 100
+  # BM25 hyperparameters
+  bm25_k1: 1.5
+  bm25_b: 0.75
 
+# ColBERT (Late Interaction)
 colbert:
-  model: "colbert-ir/colbertv2.0"
+  model: colbert-ir/colbertv2.0
   k: 100
+  checkpoint: null  # Set to custom checkpoint path if available
+  use_gpu: true
 
+# Fusion strategy: Reciprocal Rank Fusion (RRF)
 fusion:
-  alpha: 0.4
-  beta: 0.4
-  gamma: 0.2
+  method: rrf  # Options: rrf, linear, learned
+  # RRF weights (should sum to 1.0)
+  alpha: 0.4   # Weight for dense
+  beta: 0.3    # Weight for sparse
+  gamma: 0.3   # Weight for ColBERT
+  rrf_k: 60    # RRF constant: score = 1 / (k + rank)
 
+# Cross-encoder reranking
 reranker:
-  model: "cross-encoder/ms-marco-MiniLM-L-12-v2"
-  top_k: 20
+  enabled: true
+  model: cross-encoder/ms-marco-MiniLM-L-12-v2
+  # Alternative: cross-encoder/ms-marco-MiniLM-L-6-v2 (faster)
+  top_k: 20  # Final number of chunks after reranking
+  batch_size: 16
 
-index_path: "data/index/faiss.index"
-chunks_path: "data/processed/${data.dataset}_chunks.jsonl"
+# FAISS index settings
+faiss:
+  index_type: IVFFlat  # Options: Flat, IVFFlat, IVFPQ
+  nlist: 100           # Number of clusters for IVF
+  nprobe: 10           # Number of clusters to search
+  metric: L2           # Distance metric: L2 or IP (inner product)
+  use_gpu: false       # Use GPU for FAISS (if available)
+
+# Paths
+index_path: data/index/${data.dataset}/faiss.index
+chunks_path: data/processed/${data.dataset}/${data.split}_chunks.jsonl
+embeddings_path: data/index/${data.dataset}/embeddings.npy
+

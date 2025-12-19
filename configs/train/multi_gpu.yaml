@@ -1,0 +1,38 @@
+defaults:
+  - default
+
+model:
+  learning_rate: 5e-5
+
+training:
+  output_dir: checkpoints/${data.dataset}_fid_ddp
+  num_epochs: 3
+  
+  # Scale batch size for multiple GPUs
+  batch_size: 4  # Per GPU
+  gradient_accumulation_steps: 4
+  # With 4 GPUs: effective batch = 4 * 4 * 4 = 64
+  
+  warmup_steps: 100
+  max_grad_norm: 1.0
+  mixed_precision: fp16
+  
+  logging_steps: 50
+  eval_steps: 500
+  save_steps: 1000
+  save_total_limit: 3
+
+# DDP settings
+distributed:
+  enabled: true
+  backend: nccl       # For NVIDIA GPUs
+  find_unused_parameters: false
+  gradient_as_bucket_view: true
+
+dataloader:
+  num_workers: 4
+  pin_memory: true
+
+wandb:
+  enabled: true
+  project: ralfs-experiments

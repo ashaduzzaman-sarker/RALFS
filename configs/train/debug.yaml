@@ -1,9 +1,35 @@
+# ============================================================================
+# File: configs/train/debug.yaml
+# Fast config for debugging
+# ============================================================================
+defaults:
+  - default
+
 model:
-  name: "google/flan-t5-large"
-  batch_size: 1
-  grad_accum: 4
-  epochs: 1
-  lr: 1e-4
+  learning_rate: 5e-5
 
 training:
-  output_dir: "checkpoints/debug"
+  output_dir: checkpoints/debug
+  num_epochs: 1  # Just 1 epoch
+  
+  batch_size: 1
+  gradient_accumulation_steps: 2
+  
+  warmup_steps: 5  # Minimal warmup
+  max_grad_norm: 1.0
+  
+  mixed_precision: no  # Disable for easier debugging
+  
+  logging_steps: 1   # Log every step
+  eval_steps: 10     # Eval frequently
+  save_steps: 10
+  save_total_limit: 1
+
+dataloader:
+  num_workers: 0  # Single-threaded for debugging
+  pin_memory: false
+
+wandb:
+  enabled: false  # No W&B for debugging
+
+seed: 42

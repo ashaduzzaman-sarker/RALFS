@@ -1,3 +1,7 @@
+# ============================================================================
+# File: configs/ralfs.yaml
+# Main configuration file with defaults
+# ============================================================================
 defaults:
   - data: default
   - retriever: hybrid
@@ -5,4 +9,13 @@ defaults:
   - train: default
   - _self_
 
-task: "preprocess"
+# Task to run: preprocess, build_index, train, generate, evaluate
+task: train
+
+# Hydra configuration
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}

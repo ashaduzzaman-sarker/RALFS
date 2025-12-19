@@ -1,0 +1,36 @@
+# ============================================================================
+# Baseline experiment: Dense-only + FiD-base
+# ============================================================================
+defaults:
+  - /data: default
+  - /retriever: dense
+  - /generator: fid_base
+  - /train: default
+  - _self_
+
+task: train
+
+# Experiment-specific overrides
+data:
+  dataset: arxiv
+  max_samples: null
+
+retriever:
+  reranker:
+    enabled: false  # Disable reranker for baseline
+
+generator:
+  adaptive:
+    enabled: false  # Disable adaptive k for baseline
+    default_k: 10   # Fixed k=10
+
+training:
+  output_dir: checkpoints/baseline_${data.dataset}
+
+wandb:
+  enabled: true
+  name: baseline_${data.dataset}_${now:%Y%m%d_%H%M%S}
+  tags:
+    - baseline
+    - dense-only
+    - fixed-k

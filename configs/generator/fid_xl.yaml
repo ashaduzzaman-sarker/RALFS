@@ -1,0 +1,29 @@
+# ============================================================================
+# File: configs/generator/fid_xl.yaml
+# Large model for A100 GPU
+# ============================================================================
+defaults:
+  - fid
+
+model:
+  name: google/flan-t5-xl    # 3B parameters
+  max_input_length: 768      # A100 can handle more
+  max_output_length: 300     # Longer summaries
+  num_beams: 5
+
+adaptive:
+  enabled: true
+  min_k: 10
+  max_k: 30    # More chunks for better quality
+  default_k: 20
+
+lora:
+  enabled: true
+  r: 32        # Larger rank
+  alpha: 64
+  dropout: 0.1
+  target_modules:
+    - q
+    - v
+    - k        # Add key projections for XL
+

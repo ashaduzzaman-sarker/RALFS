@@ -1,0 +1,35 @@
+# ============================================================================
+# Full RALFS system: Hybrid + AdaptiveFiD + Reranker
+# ============================================================================
+defaults:
+  - /data: default
+  - /retriever: hybrid
+  - /generator: fid
+  - /train: a100
+  - _self_
+
+task: train
+
+data:
+  dataset: arxiv
+  chunking_strategy: semantic
+
+retriever:
+  reranker:
+    enabled: true
+
+generator:
+  adaptive:
+    enabled: true
+
+training:
+  output_dir: checkpoints/full_system_${data.dataset}
+
+wandb:
+  enabled: true
+  name: full_ralfs_${data.dataset}_${now:%Y%m%d_%H%M%S}
+  tags:
+    - full-system
+    - hybrid-retrieval
+    - adaptive-k
+    - reranker

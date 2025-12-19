@@ -1,0 +1,9 @@
+defaults:
+  - default
+
+dataset: arxiv
+chunk_size: 512  # ArXiv papers are long, keep moderate chunks
+overlap: 128
+chunking_strategy: semantic  # Use semantic for better topic coherence
+
+max_samples: 20 # null  # Process all samples

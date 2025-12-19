@@ -1,0 +1,10 @@
+defaults:
+  - default
+
+dataset: arxiv
+split: train
+max_samples: 10  # Only 10 samples for quick testing
+
+chunk_size: 256  # Smaller for faster processing
+overlap: 64
+num_workers: 1   # Single-threaded for easier debugging

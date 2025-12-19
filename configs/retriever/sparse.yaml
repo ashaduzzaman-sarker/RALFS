@@ -1,0 +1,18 @@
+# ============================================================================
+# File: configs/retriever/sparse.yaml
+# Sparse-only retrieval (BM25 baseline)
+# ============================================================================
+type: sparse
+
+sparse:
+  k: 100
+  bm25_k1: 1.5
+  bm25_b: 0.75
+
+# No reranker needed for sparse-only (BM25 already ranks well)
+reranker:
+  enabled: false
+  top_k: 20
+
+chunks_path: data/processed/${data.dataset}/${data.split}_chunks.jsonl
+index_path: data/index/${data.dataset}/bm25_index.pkl

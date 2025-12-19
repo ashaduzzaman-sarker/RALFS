@@ -1,4 +1,42 @@
-dataset: "arxiv"                    # arxiv | govreport | booksum
-max_samples: null                   # Set via CLI for debugging
-chunk_size: 512
-overlap: 128
+# ============================================================================
+# File: configs/data/default.yaml
+# Data processing configuration
+# ============================================================================
+# Dataset selection
+dataset: arxiv  # Options: arxiv, pubmed, govreport, booksum, multi_news
+split: train    # Options: train, validation, test
+max_samples: null  # Set to integer for debugging (e.g., 100)
+
+# Chunking parameters
+chunk_size: 512      # Tokens per chunk
+overlap: 128         # Overlap between chunks (in tokens)
+min_chunk_size: 100  # Minimum chunk size (discard smaller chunks)
+
+# Chunking strategy
+chunking_strategy: semantic  # Options: fixed, semantic, sentence
+# - fixed: Simple sliding window
+# - semantic: Topic-aware segmentation (uses embeddings)
+# - sentence: Sentence-boundary aware
+
+# Processing
+num_workers: 4  # Number of parallel workers
+batch_size: 32  # Batch size for processing
+seed: 42        # Random seed for reproducibility
+
+# Cache settings
+use_cache: true
+cache_dir: .cache/ralfs
+
+# Dataset-specific paths (auto-generated based on dataset name)
+raw_dir: data/raw/${dataset}
+processed_dir: data/processed/${dataset}
+index_dir: data/index/${dataset}
+
+# HuggingFace dataset paths (for downloader)
+hf_dataset_path:
+  arxiv: ccdv/arxiv-summarization
+  pubmed: ccdv/pubmed-summarization
+  govreport: ccdv/govreport-summarization
+  booksum: kmfoda/booksum
+  multi_news: multi_news
+

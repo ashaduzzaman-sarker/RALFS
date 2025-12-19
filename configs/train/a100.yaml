@@ -1,0 +1,38 @@
+# ============================================================================
+# File: configs/train/a100.yaml
+# Training config optimized for A100 GPU (40GB)
+# ============================================================================
+defaults:
+  - default
+
+model:
+  learning_rate: 5e-5
+
+training:
+  output_dir: checkpoints/${data.dataset}_fid_a100
+  num_epochs: 3
+  
+  # Larger batches for A100
+  batch_size: 8
+  gradient_accumulation_steps: 2  # Effective batch = 8 * 2 = 16
+  
+  warmup_steps: 100
+  max_grad_norm: 1.0
+  
+  # Use bf16 on A100 (better than fp16)
+  mixed_precision: bf16
+  
+  logging_steps: 50
+  eval_steps: 500
+  save_steps: 1000
+  save_total_limit: 3
+
+dataloader:
+  num_workers: 8  # More workers for A100
+  pin_memory: true
+  prefetch_factor: 4
+
+wandb:
+  enabled: true
+  project: ralfs-experiments
+  entity: null

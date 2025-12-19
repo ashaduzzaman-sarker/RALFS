@@ -1,15 +1,69 @@
+# ============================================================================
+# File: configs/train/default.yaml
+# Training configuration
+# ============================================================================
+# Model and optimizer
 model:
-  name: "google/flan-t5-large"
-  batch_size: 1
-  grad_accum: 16
-  lr: 5e-5
-  epochs: 3
-  warmup_steps: 100
+  name: ${generator.model.name}  # Inherit from generator config
+  learning_rate: 5e-5
   weight_decay: 0.01
+  adam_beta1: 0.9
+  adam_beta2: 0.999
+  adam_epsilon: 1e-8
 
+# Training parameters
 training:
-  output_dir: "checkpoints/${data.dataset}_fid"
+  output_dir: checkpoints/${data.dataset}_fid
+  num_epochs: 3
+  
+  # Batch sizes (adjust for GPU memory)
+  batch_size: 1                   # Per device batch size (T4)
+  gradient_accumulation_steps: 16  # Effective batch = 1 * 16 = 16
+  
+  # Warmup and scheduler
+  warmup_steps: 100
+  warmup_ratio: 0.1  # Alternative to warmup_steps
+  lr_scheduler_type: linear  # Options: linear, cosine, polynomial
+  
+  # Gradient clipping
+  max_grad_norm: 1.0
+  
+  # Mixed precision
+  mixed_precision: fp16  # Options: no, fp16, bf16
+  fp16_opt_level: O1
+  
+  # Logging and checkpointing
+  logging_steps: 50
   eval_steps: 500
   save_steps: 1000
-  logging_steps: 50
-  mixed_precision: "fp16"
+  save_total_limit: 3  # Keep only 3 best checkpoints
+  
+  # Evaluation
+  eval_strategy: steps  # Options: no, steps, epoch
+  load_best_model_at_end: true
+  metric_for_best_model: rougeL
+  greater_is_better: true
+  
+  # Early stopping
+  early_stopping_patience: 3
+  early_stopping_threshold: 0.001
+
+# DataLoader settings
+dataloader:
+  num_workers: 4
+  pin_memory: true
+  prefetch_factor: 2
+
+# Weights & Biases
+wandb:
+  enabled: false
+  project: null           # Set to your W&B project name
+  entity: null            # Set to your W&B username/team
+  name: ${data.dataset}_fid_${now:%Y%m%d_%H%M%S}
+  tags:
+    - ${data.dataset}
+    - fid
+    - adaptive-k
+
+# Reproducibility
+seed: 42

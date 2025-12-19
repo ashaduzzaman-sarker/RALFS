@@ -1,17 +1,46 @@
 #!/bin/bash
-set -e
+# ============================================================================
+# Training script for RALFS
+# ============================================================================
 
-echo "Starting RALFS Training"
-echo "Dataset: ${1:-arxiv}"
-echo "Using accelerate (fp16 on T4/A100)"
+set -e  # Exit on error
 
-# poetry run ralfs task=train \
-accelerate launch \
-    --mixed_precision=fp16 \
-    src/ralfs/training/trainer.py \
-    +data.dataset=${1:-arxiv} \
-    +model.batch_size=1 \
-    +model.grad_accum=16 \
-    +model.epochs=3
+echo "🚀 RALFS Training Script"
+echo "========================"
 
-echo "Training complete! Checkpoints in checkpoints/${1:-arxiv}_fid"
+# Configuration
+DATASET=${1:-"arxiv"}
+CONFIG=${2:-"configs/train/default.yaml"}
+OUTPUT_DIR=${3:-"checkpoints/${DATASET}_$(date +%Y%m%d_%H%M%S)"}
+WANDB_PROJECT=${4:-"ralfs-experiments"}
+
+echo "Dataset: $DATASET"
+echo "Config: $CONFIG"
+echo "Output: $OUTPUT_DIR"
+echo "W&B Project: $WANDB_PROJECT"
+echo ""
+
+# Check if data is preprocessed
+if [ ! -f "data/processed/${DATASET}_train_chunks.jsonl" ]; then
+    echo "❌ Preprocessed data not found. Run preprocessing first:"
+    echo "   ralfs preprocess --dataset $DATASET"
+    exit 1
+fi
+
+# Check if indexes are built
+if [ ! -f "data/index/${DATASET}/faiss.index" ]; then
+    echo "⚠️  Indexes not found. Building indexes..."
+    ralfs build-index --dataset $DATASET
+fi
+
+# Start training
+echo "Starting training..."
+ralfs train \
+    --config $CONFIG \
+    --dataset $DATASET \
+    --output-dir $OUTPUT_DIR \
+    --wandb-project $WANDB_PROJECT
+
+echo ""
+echo "✅ Training complete!"
+echo "Checkpoints saved to: $OUTPUT_DIR"

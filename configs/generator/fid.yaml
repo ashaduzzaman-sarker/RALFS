@@ -1,9 +1,56 @@
+# ============================================================================
+# File: configs/generator/fid.yaml
+# Fusion-in-Decoder generation with adaptive k
+# ============================================================================
+# Model configuration
 model:
-  name: "google/flan-t5-large"
-  max_input_length: 512
-  max_output_length: 200
+  name: google/flan-t5-large  # 780M parameters
+  max_input_length: 512       # Per-chunk max length
+  max_output_length: 200      # Summary max length
+  
+  # Generation parameters
   num_beams: 4
+  length_penalty: 1.0
+  no_repeat_ngram_size: 3
+  early_stopping: true
+  min_length: 50
+  max_length: 200
+  
+  # Temperature and sampling (for non-greedy generation)
+  do_sample: false
+  temperature: 1.0
+  top_k: 50
+  top_p: 0.95
 
+# Adaptive k selection (novel contribution)
 adaptive:
-  min_k: 5
-  max_k: 20
+  enabled: true
+  min_k: 5    # Minimum number of chunks
+  max_k: 20   # Maximum number of chunks
+  default_k: 15
+  
+  # Strategy for selecting k
+  strategy: confidence  # Options: confidence, query_length, fixed
+  # - confidence: Use model confidence scores
+  # - query_length: Scale k based on input length
+  # - fixed: Always use default_k
+
+# LoRA configuration for efficient fine-tuning
+lora:
+  enabled: true
+  r: 16                    # LoRA rank
+  alpha: 32                # LoRA alpha (scaling factor)
+  dropout: 0.1
+  target_modules:          # Which modules to apply LoRA
+    - q                    # Query projection
+    - v                    # Value projection
+  bias: none               # Options: none, all, lora_only
+  task_type: SEQ_2_SEQ_LM
+  inference_mode: false
+
+# Quantization (for memory efficiency)
+quantization:
+  load_in_8bit: false  # Set true for 8-bit inference
+  load_in_4bit: false  # Set true for 4-bit inference (requires bitsandbytes)
+  bnb_4bit_compute_dtype: float16
+  bnb_4bit_quant_type: nf4
