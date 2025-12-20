@@ -7,7 +7,7 @@ Complete guide for training RALFS models for conference paper submissions.
 ### 1. Environment Setup
 ```bash
 pip install -e .
-python -m spacy download en_core_web_sm
+pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
 ```
 
 ### 2. Data Preprocessing

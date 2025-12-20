@@ -18,7 +18,10 @@ RALFS is a production-grade, research-ready system for long-form summarization, 
 ### Quick Start
 ```bash
 # Install
-poetry install --extras gpu
+poetry install
+
+# Install Spacy model
+poetry run pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
 
 # Preprocess data
 ralfs preprocess --dataset arxiv --max-samples 1000
