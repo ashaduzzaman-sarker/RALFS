@@ -24,52 +24,49 @@ help:
 
 # Installation
 install:
-	@echo "Installing RALFS..."
-	pip install --upgrade pip
-	# pip install --upgrade poetry
-	# poetry install -q
-	# poetry run 
-	pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
-	pip install git+https://github.com/stanford-futuredata/ColBERT.git
+	@echo "Installing RALFS with Poetry..."
+	poetry install
+	poetry run pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
+	poetry run pip install git+https://github.com/stanford-futuredata/ColBERT.git
 	@echo "✓ Installation complete"
 
 install-dev:
-	@echo "Installing RALFS with dev dependencies..."
-	pip install -e ".[dev]"
-	pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
-	pip install git+https://github.com/stanford-futuredata/ColBERT.git
-	pre-commit install
+	@echo "Installing RALFS with dev dependencies using Poetry..."
+	poetry install --with dev
+	poetry run pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
+	poetry run pip install git+https://github.com/stanford-futuredata/ColBERT.git
+	poetry run pre-commit install
 	@echo "✓ Dev installation complete"
 
 # Testing
 test:
 	@echo "Running tests..."
-	pytest tests/ -v -m "not slow"
+	poetry run pytest tests/ -v -m "not slow"
 
 test-fast:
 	@echo "Running fast tests..."
-	pytest tests/ -v -m "not slow and not integration"
+	poetry run pytest tests/ -v -m "not slow and not integration"
 
 test-all:
 	@echo "Running all tests (including slow)..."
-	pytest tests/ -v
+	poetry run pytest tests/ -v
 
 test-cov:
 	@echo "Running tests with coverage..."
-	pytest tests/ -v --cov=ralfs --cov-report=html --cov-report=term-missing
+	poetry run pytest tests/ -v --cov=ralfs --cov-report=html --cov-report=term-missing
 	@echo "Coverage report: htmlcov/index.html"
 
 # Linting and formatting
 lint:
 	@echo "Running linters..."
-	ruff check ralfs/ tests/
-	mypy ralfs/
+	poetry run ruff check ralfs/ tests/
+	poetry run mypy ralfs/
 	@echo "✓ Linting complete"
 
 format:
 	@echo "Formatting code..."
-	black ralfs/ tests/
-	isort ralfs/ tests/
+	poetry run black ralfs/ tests/
+	poetry run isort ralfs/ tests/
 	@echo "✓ Formatting complete"
 
 # Cleaning
@@ -87,19 +84,19 @@ clean:
 # RALFS commands
 preprocess:
 	@echo "Preprocessing data..."
-	ralfs preprocess --dataset arxiv --max-samples 10
+	poetry run ralfs preprocess --dataset arxiv --max-samples 10
 
 build-index:
 	@echo "Building indexes..."
-	ralfs build-index --dataset arxiv
+	poetry run ralfs build-index --dataset arxiv
 
 train:
 	@echo "Training model..."
-	ralfs train --dataset arxiv --config configs/train/debug.yaml
+	poetry run ralfs train --dataset arxiv --config configs/train/debug.yaml
 
 evaluate:
 	@echo "Running evaluation..."
-	ralfs evaluate results/predictions.json data/test/references.json
+	poetry run ralfs evaluate results/predictions.json data/test/references.json
 
 # Quick start
 quickstart:

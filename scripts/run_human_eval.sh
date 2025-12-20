@@ -15,7 +15,7 @@ echo "References: $REFERENCES"
 echo "Output: $OUTPUT"
 echo "Samples: $NUM_SAMPLES"
 
-ralfs human-eval $PREDICTIONS $REFERENCES \
+poetry run ralfs human-eval $PREDICTIONS $REFERENCES \
     --output-file $OUTPUT \
     --num-samples $NUM_SAMPLES
 

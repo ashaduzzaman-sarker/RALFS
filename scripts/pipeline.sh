@@ -17,7 +17,7 @@ echo "Config: $CONFIG"
 echo ""
 
 # Run complete pipeline using CLI
-ralfs pipeline \
+poetry run ralfs pipeline \
     --dataset $DATASET \
     --max-samples $MAX_SAMPLES \
     --config $CONFIG

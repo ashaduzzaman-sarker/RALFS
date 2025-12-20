@@ -23,19 +23,19 @@ echo ""
 # Check if data is preprocessed
 if [ ! -f "data/processed/${DATASET}_train_chunks.jsonl" ]; then
     echo "❌ Preprocessed data not found. Run preprocessing first:"
-    echo "   ralfs preprocess --dataset $DATASET"
+    echo "   poetry run ralfs preprocess --dataset $DATASET"
     exit 1
 fi
 
 # Check if indexes are built
 if [ ! -f "data/index/${DATASET}/faiss.index" ]; then
     echo "⚠️  Indexes not found. Building indexes..."
-    ralfs build-index --dataset $DATASET
+    poetry run ralfs build-index --dataset $DATASET
 fi
 
 # Start training
 echo "Starting training..."
-ralfs train \
+poetry run ralfs train \
     --config $CONFIG \
     --dataset $DATASET \
     --output-dir $OUTPUT_DIR \

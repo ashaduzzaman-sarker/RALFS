@@ -13,7 +13,7 @@ echo "Dataset: $DATASET"
 echo "Split: $SPLIT"
 [ -n "$MAX_SAMPLES" ] && echo "Max samples: $MAX_SAMPLES"
 
-CMD="ralfs preprocess --dataset $DATASET --split $SPLIT"
+CMD="poetry run ralfs preprocess --dataset $DATASET --split $SPLIT"
 [ -n "$MAX_SAMPLES" ] && CMD="$CMD --max-samples $MAX_SAMPLES"
 
 $CMD

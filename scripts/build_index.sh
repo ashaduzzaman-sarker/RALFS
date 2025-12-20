@@ -10,7 +10,7 @@ FORCE=${2:-""}
 echo "🔍 RALFS Index Building"
 echo "Dataset: $DATASET"
 
-CMD="ralfs build-index --dataset $DATASET"
+CMD="poetry run ralfs build-index --dataset $DATASET"
 [ "$FORCE" = "--force" ] && CMD="$CMD --force"
 
 $CMD
