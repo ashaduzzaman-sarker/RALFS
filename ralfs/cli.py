@@ -25,7 +25,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from ralfs.core.config import load_config
 from ralfs.core.logging import setup_logging, get_logger
 from ralfs.data.processor import run_preprocessing
-from ralfs.data.indexer import build_index, IndexBuilder
+from ralfs.data.indexer import IndexBuilder
 from ralfs.retriever import create_retriever
 from ralfs.generator import create_generator
 from ralfs.training.trainer import train_model
