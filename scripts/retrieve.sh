@@ -1,9 +1,20 @@
 #!/bin/bash
+# ============================================================================
+# RALFS Retrieval Script
+# ============================================================================
 set -e
 
-echo "Starting RALFS Retriever Pipeline"
+QUERY=${1:-"attention is all you need"}
+DATASET=${2:-"arxiv"}
+K=${3:-10}
 
-poetry run ralfs task=retrieve \
-    query="attention is all you need" \
+echo "🔍 RALFS Retrieval"
+echo "Query: $QUERY"
+echo "Dataset: $DATASET"
+echo "Top K: $K"
 
-echo "Retriever complete!"
+ralfs search "$QUERY" \
+    --dataset $DATASET \
+    --k $K
+
+echo "✅ Retrieval complete!"

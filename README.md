@@ -126,14 +126,17 @@ RALFS/
 │   ├── build_index.sh
 │   ├── train.sh
 │   ├── generate.sh
-│   └── evaluate.sh
+│   ├── evaluate.sh
+│   └── pipeline.sh
 ├── examples/
 │   ├── retrieval_demo.ipynb
 │   └── full_pipeline_demo.ipynb
 ├── tests/
-│   ├── test_chunker.py
-│   ├── test_hybrid.py
-│   └── test_faithfulness.py
+│   ├── test_data.py
+│   ├── test_retriever.py
+│   ├── test_generator.py
+│   ├── test_evaluation.py
+│   └── test_pipeline.py
 ├── paper/
 │   ├── main.tex
 │   └── figures/

@@ -1,7 +1,23 @@
 #!/bin/bash
-echo "Preparing human evaluation files..."
-poetry run python -m src.evaluation.human_eval \
-    --predictions results/predictions.jsonl \
-    --output human_eval_batch1.csv
+# ============================================================================
+# RALFS Human Evaluation Template Creation Script
+# ============================================================================
+set -e
 
-echo "Done! Send human_eval_batch1.csv to annotators".
+PREDICTIONS=${1:-"results/predictions.jsonl"}
+REFERENCES=${2:-"data/test/references.jsonl"}
+OUTPUT=${3:-"results/human_eval.csv"}
+NUM_SAMPLES=${4:-50}
+
+echo "👥 RALFS Human Evaluation Template"
+echo "Predictions: $PREDICTIONS"
+echo "References: $REFERENCES"
+echo "Output: $OUTPUT"
+echo "Samples: $NUM_SAMPLES"
+
+ralfs human-eval $PREDICTIONS $REFERENCES \
+    --output-file $OUTPUT \
+    --num-samples $NUM_SAMPLES
+
+echo "✅ Template created: $OUTPUT"
+echo "Send this file to human annotators"

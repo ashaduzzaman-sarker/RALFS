@@ -1,23 +1,32 @@
 #!/bin/bash
-
-set -e  # Exit on error
+# ============================================================================
+# RALFS Configuration Setup Script
+# ============================================================================
+set -e
 
 echo "🔧 Setting up RALFS configuration system..."
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-NC='\033[0m' # No Color
-
-# Project root
 PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$PROJECT_ROOT"
 
-echo -e "${BLUE}Project root: $PROJECT_ROOT${NC}"
+echo "Project root: $PROJECT_ROOT"
 
-# ============================================================================
+# Create directory structure
+echo "Creating config directory structure..."
+mkdir -p configs/{data,retriever,generator,train,experiment}
+
+echo "✅ Configuration directories created"
+
+# Validate required configs
+echo "Validating configs..."
+if [ ! -f "configs/ralfs.yaml" ]; then
+    echo "⚠️  configs/ralfs.yaml not found - please create it"
+    exit 1
+fi
+
+echo "✅ Configuration setup complete!"
+echo "Config directories:"
+ls -la configs/
 # Step 1: Create directory structure
 # ============================================================================
 echo -e "\n${YELLOW}Step 1: Creating config directory structure...${NC}"

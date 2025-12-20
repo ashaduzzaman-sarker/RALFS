@@ -1,5 +1,18 @@
 #!/bin/bash
+# ============================================================================
+# RALFS Index Building Script
+# ============================================================================
 set -e
-echo "Building FAISS + ColBERT index"
-poetry run ralfs task=build_index
-echo "Index ready → data/index/faiss.index + ColBERT cache"
+
+DATASET=${1:-"arxiv"}
+FORCE=${2:-""}
+
+echo "🔍 RALFS Index Building"
+echo "Dataset: $DATASET"
+
+CMD="ralfs build-index --dataset $DATASET"
+[ "$FORCE" = "--force" ] && CMD="$CMD --force"
+
+$CMD
+
+echo "✅ Index building complete!"
