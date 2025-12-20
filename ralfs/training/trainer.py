@@ -8,6 +8,7 @@ from typing import Optional, Dict, Any, List
 from pathlib import Path
 import time
 import json
+import numpy as np
 import torch
 from torch.utils.data import DataLoader
 from transformers import (
@@ -236,6 +237,8 @@ class RALFSTrainer:
             'eval_losses': [],
             'eval_rouge': [],
             'learning_rates': [],
+            'global_steps': [],
+            'epochs': [],
         }
         
         logger.info(f"Starting training for {num_epochs} epochs...")
@@ -271,6 +274,11 @@ class RALFSTrainer:
                 
                 # Update (every gradient_accumulation_steps)
                 if (step + 1) % gradient_accumulation_steps == 0:
+                    # Gradient clipping for stability
+                    max_grad_norm = getattr(training_cfg, 'max_grad_norm', 1.0)
+                    if max_grad_norm > 0:
+                        self.accelerator.clip_grad_norm_(self.model.parameters(), max_grad_norm)
+                    
                     self.optimizer.step()
                     self.scheduler.step()
                     self.optimizer.zero_grad()
@@ -292,6 +300,8 @@ class RALFSTrainer:
                     
                     training_stats['train_losses'].append(avg_loss)
                     training_stats['learning_rates'].append(lr)
+                    training_stats['global_steps'].append(self.global_step)
+                    training_stats['epochs'].append(epoch)
                     
                     # W&B logging
                     if self.use_wandb:
@@ -300,6 +310,7 @@ class RALFSTrainer:
                             'train/learning_rate': lr,
                             'train/epoch': epoch,
                             'train/step': self.global_step,
+                            'train/perplexity': np.exp(avg_loss) if avg_loss < 100 else float('inf'),
                         })
                 
                 # Save checkpoint

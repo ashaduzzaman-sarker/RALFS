@@ -1,7 +1,32 @@
 # ============================================================================
 # File: ralfs/generator/adaptive_k.py
 # ============================================================================
-"""Adaptive k selection strategies for FiD."""
+"""
+Adaptive k selection for Fusion-in-Decoder (Novel Contribution).
+
+Dynamically determines the optimal number of passages (k) to use for
+generation based on retrieval scores and query characteristics.
+
+Mathematical Formulation:
+    k = argmax_{k ∈ [k_min, k_max]} Q(k)
+    
+    where Q(k) is a quality function that balances:
+    - Retrieval confidence: Σ(scores[i]) for i ∈ [0, k]
+    - Score dropoff: Δ(scores[k-1], scores[k])
+    - Query complexity: f(query_length, entity_count)
+
+Strategies:
+    1. score_dropoff: Use k where retrieval scores drop significantly
+       Q(k) = scores[k] - λ·Δ(scores[k], scores[k+1])
+       
+    2. confidence: Use k based on cumulative confidence threshold
+       Q(k) = Σ(scores[:k]) / k ≥ τ
+       
+    3. fixed: Always use default_k (baseline)
+
+This is a novel contribution that reduces computation (fewer passages)
+while maintaining or improving quality by avoiding noisy low-scoring passages.
+"""
 
 from __future__ import annotations
 from typing import List, Optional
