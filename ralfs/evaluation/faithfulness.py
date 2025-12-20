@@ -375,7 +375,7 @@ class EntityGridFaithfulness:
         total_transitions = sum(grid.transitions.values())
         
         if total_transitions == 0:
-            return 0.0
+            return 1.0  # No transitions means no incoherence (e.g., single sentence)
         
         # Count coherent and incoherent transitions
         coherent = sum(
