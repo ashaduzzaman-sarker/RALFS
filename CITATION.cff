@@ -1,0 +1,10 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+type: software
+title: "RALFS: Retrieval-Augmented Long-Form Summarization with Hybrid Fusion and Adaptive Decoding"
+authors:
+  - family-names: "Sarker"
+    given-names: "Ashaduzzaman"
+year: 2026
+license: MIT
+repository-code: "https://github.com/ashaduzzaman-sarker/RALFS"
