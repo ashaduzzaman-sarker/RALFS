@@ -15,6 +15,22 @@ from ralfs.training.trainer import RALFSTrainer, train_model
 from ralfs.training.dataset import FiDDataset, create_dataloader
 
 
+@pytest.fixture(autouse=True)
+def reset_accelerator_state():
+    """Reset AcceleratorState before each test to avoid reinitialization errors."""
+    from accelerate.state import AcceleratorState
+    
+    # Reset the singleton instance
+    if AcceleratorState._shared_state:
+        AcceleratorState._shared_state.clear()
+    
+    yield
+    
+    # Clean up after test
+    if AcceleratorState._shared_state:
+        AcceleratorState._shared_state.clear()
+
+
 class TestFiDDataset:
     """Test FiD dataset class."""
     

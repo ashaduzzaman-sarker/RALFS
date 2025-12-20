@@ -52,6 +52,8 @@ class AdaptiveKSelector:
         max_k: int = 30,
         default_k: int = 20,
         strategy: str = "score_dropoff",
+        threshold: float = 0.1,
+        percentile: float = 75.0,
     ):
         """
         Initialize adaptive k selector.
@@ -60,12 +62,16 @@ class AdaptiveKSelector:
             min_k: Minimum number of passages
             max_k: Maximum number of passages
             default_k: Default k if strategy fails
-            strategy: Selection strategy ('score_dropoff', 'confidence', 'fixed')
+            strategy: Selection strategy ('score_dropoff', 'threshold', 'percentile', 'confidence', 'fixed')
+            threshold: Threshold for 'dropoff' and 'threshold' strategies
+            percentile: Percentile for 'percentile' strategy
         """
         self.min_k = min_k
         self.max_k = max_k
         self.default_k = default_k
         self.strategy = strategy
+        self.threshold = threshold
+        self.percentile = percentile
         
         if not (1 <= min_k <= max_k):
             raise ValueError(f"Invalid k range: min_k={min_k}, max_k={max_k}")
@@ -95,8 +101,12 @@ class AdaptiveKSelector:
             return n_available
         
         # Apply strategy
-        if self.strategy == "score_dropoff":
+        if self.strategy == "score_dropoff" or self.strategy == "dropoff":
             k = self._score_dropoff_strategy(scores)
+        elif self.strategy == "threshold":
+            k = self._threshold_strategy(scores)
+        elif self.strategy == "percentile":
+            k = self._percentile_strategy(scores)
         elif self.strategy == "confidence":
             k = self._confidence_strategy(scores)
         elif self.strategy == "fixed":
@@ -173,5 +183,42 @@ class AdaptiveKSelector:
                 k = self.default_k
         else:
             k = self.default_k
+        
+        return k
+    
+    def _threshold_strategy(self, scores: List[float]) -> int:
+        """
+        Select k based on absolute score threshold.
+        
+        The intuition: Use all passages above a quality threshold.
+        """
+        if len(scores) <= self.min_k:
+            return len(scores)
+        
+        # Count scores above threshold
+        k = sum(1 for s in scores if s >= self.threshold)
+        
+        # Ensure k is at least min_k
+        k = max(self.min_k, k)
+        
+        return k
+    
+    def _percentile_strategy(self, scores: List[float]) -> int:
+        """
+        Select k based on score percentile.
+        
+        The intuition: Use passages up to a certain percentile of score distribution.
+        """
+        if len(scores) <= self.min_k:
+            return len(scores)
+        
+        # Compute percentile threshold
+        threshold_score = np.percentile(scores, 100 - self.percentile)
+        
+        # Count scores above percentile threshold
+        k = sum(1 for s in scores if s >= threshold_score)
+        
+        # Ensure k is at least min_k
+        k = max(self.min_k, k)
         
         return k

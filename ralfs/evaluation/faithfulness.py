@@ -304,8 +304,17 @@ class EntityGridFaithfulness:
         ref_entities = set(ref_grid.grid.keys())
         gen_entities = set(gen_grid.grid.keys())
         
+        # Handle empty cases
+        if not ref_entities and not gen_entities:
+            # Both empty - perfect match
+            return 1.0
+        
         if not ref_entities:
             return 0.0
+        
+        # Check for identical entity sets
+        if ref_entities == gen_entities:
+            return 1.0
         
         # Jaccard similarity
         overlap = len(ref_entities & gen_entities)
@@ -325,8 +334,18 @@ class EntityGridFaithfulness:
         ref_probs = ref_grid.get_transition_probabilities()
         gen_probs = gen_grid.get_transition_probabilities()
         
+        # Handle empty cases
+        if not ref_probs and not gen_probs:
+            # Both empty - perfect match
+            return 1.0
+        
         if not ref_probs or not gen_probs:
+            # One empty, one not - no similarity
             return 0.0
+        
+        # Check if they're identical (for exact text match)
+        if ref_probs == gen_probs:
+            return 1.0
         
         # Get all transition types
         all_transitions = set(ref_probs.keys()) | set(gen_probs.keys())
@@ -334,6 +353,10 @@ class EntityGridFaithfulness:
         # Build probability vectors
         ref_vec = np.array([ref_probs.get(t, 0.0) for t in all_transitions])
         gen_vec = np.array([gen_probs.get(t, 0.0) for t in all_transitions])
+        
+        # Check if vectors are identical (within tolerance)
+        if np.allclose(ref_vec, gen_vec):
+            return 1.0
         
         # Compute Jensen-Shannon divergence
         js_div = self._jensen_shannon_divergence(ref_vec, gen_vec)

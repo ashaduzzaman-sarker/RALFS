@@ -108,12 +108,17 @@ class FiDGenerator(BaseGenerator):
     
     def _init_adaptive_k(self):
         """Initialize adaptive k selector."""
+        gen_config = self.cfg.generator
+        
+        # Check for max_k at generator level (for tests)
+        max_k_override = getattr(gen_config, 'max_k', None)
+        
         if self.adaptive_config:
             enabled = getattr(self.adaptive_config, 'enabled', True)
             
             if enabled:
                 min_k = getattr(self.adaptive_config, 'min_k', 5)
-                max_k = getattr(self.adaptive_config, 'max_k', 30)
+                max_k = max_k_override or getattr(self.adaptive_config, 'max_k', 30)
                 default_k = getattr(self.adaptive_config, 'default_k', 20)
                 strategy = getattr(self.adaptive_config, 'strategy', 'score_dropoff')
                 
@@ -130,8 +135,17 @@ class FiDGenerator(BaseGenerator):
                 self.fixed_k = getattr(self.adaptive_config, 'default_k', 20)
                 logger.info(f"Adaptive k disabled, using fixed k={self.fixed_k}")
         else:
+            # Check if max_k is set at generator config level
+            min_k = getattr(gen_config, 'adaptive_k_min', 5)
+            max_k = max_k_override or getattr(gen_config, 'adaptive_k_max', 30)
+            default_k = min(20, max_k)  # Ensure default_k <= max_k
+            
             # Default: use adaptive k
-            self.adaptive_k_selector = AdaptiveKSelector()
+            self.adaptive_k_selector = AdaptiveKSelector(
+                min_k=min_k,
+                max_k=max_k,
+                default_k=default_k,
+            )
             self.use_adaptive_k = True
     
     def generate(
