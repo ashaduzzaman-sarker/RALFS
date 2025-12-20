@@ -59,12 +59,40 @@ def handle_error(error: Exception, message: str = "Error") -> None:
 
 @app.command()
 def preprocess(
-    dataset: str = typer.Option("arxiv", help="Dataset name: arxiv, pubmed, govreport"),
-    split: str = typer.Option("train", help="Data split: train, validation, test"),
-    max_samples: Optional[int] = typer.Option(None, help="Max samples (for debugging)"),
-    force_download: bool = typer.Option(False, help="Force re-download"),
-    force_rechunk: bool = typer.Option(False, help="Force re-chunk"),
-    config: Optional[Path] = typer.Option(None, help="Custom config YAML"),
+    dataset: str = typer.Option(
+        "arxiv",
+        "--dataset",
+        "-d",
+        help="Dataset name: arxiv, pubmed, govreport"
+    ),
+    split: str = typer.Option(
+        "train",
+        "--split",
+        "-s",
+        help="Data split: train, validation, test"
+    ),
+    max_samples: Optional[int] = typer.Option(
+        None,
+        "--max-samples",
+        "-n",
+        help="Max samples (for debugging)"
+    ),
+    force_download: bool = typer.Option(
+        False,
+        "--force-download/--no-force-download",
+        help="Force re-download"
+    ),
+    force_rechunk: bool = typer.Option(
+        False,
+        "--force-rechunk/--no-force-rechunk",
+        help="Force re-chunk"
+    ),
+    config: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Custom config YAML"
+    ),
 ):
     """📦 Preprocess dataset: download and chunk documents."""
     init_logger()
@@ -85,10 +113,29 @@ def preprocess(
 
 @app.command()
 def build_index(
-    dataset: str = typer.Option("arxiv", help="Dataset name"),
-    split: str = typer.Option("train", help="Data split"),
-    force: bool = typer.Option(False, help="Force rebuild"),
-    config: Optional[Path] = typer.Option(None, help="Config file"),
+    dataset: str = typer.Option(
+        "arxiv",
+        "--dataset",
+        "-d",
+        help="Dataset name"
+    ),
+    split: str = typer.Option(
+        "train",
+        "--split",
+        "-s",
+        help="Data split"
+    ),
+    force: bool = typer.Option(
+        False,
+        "--force/--no-force",
+        help="Force rebuild"
+    ),
+    config: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Config file"
+    ),
 ):
     """🔍 Build retrieval indexes (FAISS + BM25)."""
     init_logger()
@@ -111,11 +158,34 @@ def build_index(
 
 @app.command()
 def search(
-    query: str = typer.Argument(..., help="Search query"),
-    k: int = typer.Option(10, help="Number of results"),
-    dataset: str = typer.Option("arxiv", help="Dataset name"),
-    retriever_type: str = typer.Option("hybrid", help="Retriever type: dense, sparse, hybrid"),
-    config: Optional[Path] = typer.Option(None, help="Config file"),
+    query: str = typer.Argument(
+        ...,
+        help="Search query"
+    ),
+    k: int = typer.Option(
+        10,
+        "--k",
+        "-k",
+        help="Number of results"
+    ),
+    dataset: str = typer.Option(
+        "arxiv",
+        "--dataset",
+        "-d",
+        help="Dataset name"
+    ),
+    retriever_type: str = typer.Option(
+        "hybrid",
+        "--retriever-type",
+        "-r",
+        help="Retriever type: dense, sparse, hybrid"
+    ),
+    config: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Config file"
+    ),
 ):
     """🔍 Search for relevant chunks."""
     init_logger()
@@ -141,11 +211,35 @@ def search(
 
 @app.command()
 def train(
-    config: Path = typer.Option("configs/train/default.yaml", help="Training config"),
-    dataset: str = typer.Option("arxiv", help="Dataset name"),
-    output_dir: Optional[Path] = typer.Option(None, help="Checkpoint directory"),
-    wandb_project: Optional[str] = typer.Option(None, help="W&B project name"),
-    resume: Optional[Path] = typer.Option(None, help="Resume from checkpoint"),
+    config: Path = typer.Option(
+        "configs/train/default.yaml",
+        "--config",
+        "-c",
+        help="Training config"
+    ),
+    dataset: str = typer.Option(
+        "arxiv",
+        "--dataset",
+        "-d",
+        help="Dataset name"
+    ),
+    output_dir: Optional[Path] = typer.Option(
+        None,
+        "--output-dir",
+        "-o",
+        help="Checkpoint directory"
+    ),
+    wandb_project: Optional[str] = typer.Option(
+        None,
+        "--wandb-project",
+        "-w",
+        help="W&B project name"
+    ),
+    resume: Optional[Path] = typer.Option(
+        None,
+        "--resume",
+        help="Resume from checkpoint"
+    ),
 ):
     """🔥 Train RALFS model with LoRA and adaptive FiD."""
     init_logger()
@@ -185,12 +279,42 @@ def train(
 
 @app.command()
 def generate(
-    input_file: Path = typer.Argument(..., help="Input JSONL file with documents"),
-    checkpoint: Path = typer.Option(..., help="Model checkpoint path"),
-    output_file: Path = typer.Option("results/summaries.json", help="Output file"),
-    dataset: str = typer.Option("arxiv", help="Dataset name (for retriever)"),
-    retriever_k: int = typer.Option(20, help="Number of chunks to retrieve"),
-    config: Optional[Path] = typer.Option(None, help="Config file"),
+    input_file: Path = typer.Argument(
+        ...,
+        help="Input JSONL file with documents",
+        exists=True,
+    ),
+    checkpoint: Path = typer.Option(
+        ...,
+        "--checkpoint",
+        "-m",
+        help="Model checkpoint path",
+        exists=True,
+    ),
+    output_file: Path = typer.Option(
+        "results/summaries.json",
+        "--output",
+        "-o",
+        help="Output file"
+    ),
+    dataset: str = typer.Option(
+        "arxiv",
+        "--dataset",
+        "-d",
+        help="Dataset name (for retriever)"
+    ),
+    retriever_k: int = typer.Option(
+        20,
+        "--retriever-k",
+        "-k",
+        help="Number of chunks to retrieve"
+    ),
+    config: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Config file"
+    ),
 ):
     """✨ Generate summaries for input documents."""
     init_logger()
@@ -200,19 +324,20 @@ def generate(
         cfg = load_config(config) if config else load_config()
         cfg.data.dataset = dataset
         
-        if not input_file.exists():
-            raise FileNotFoundError(f"Input file not found: {input_file}")
-        
+        # Load documents
         documents = load_jsonl(input_file) if input_file.suffix == '.jsonl' else load_json(input_file)
         console.print(f"Loaded {len(documents)} documents")
         
+        # Load retriever
         console.print("Loading retriever...")
         retriever = create_retriever(cfg)
         retriever.load_index()
         
+        # Load generator
         console.print(f"Loading generator from {checkpoint}...")
         generator = create_generator(cfg)
         
+        # Generate summaries
         results = []
         with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
             task = progress.add_task("Generating summaries...", total=len(documents))
@@ -221,9 +346,11 @@ def generate(
                 doc_id = doc.get('id', 'unknown')
                 text = doc.get('text', '')
                 
+                # Retrieve relevant passages
                 retrieved = retriever.retrieve(text[:1000], k=retriever_k)
                 passages = [{'text': r.text, 'score': r.score} for r in retrieved]
                 
+                # Generate summary
                 result = generator.generate(text[:1000], passages)
                 
                 results.append({
@@ -235,6 +362,7 @@ def generate(
                 
                 progress.update(task, advance=1)
         
+        # Save results
         output_file.parent.mkdir(parents=True, exist_ok=True)
         save_json(results, output_file)
         console.print(f"[bold green]✅ Summaries saved to:[/bold green] {output_file}")
@@ -244,10 +372,28 @@ def generate(
 
 @app.command()
 def evaluate(
-    predictions: Path = typer.Argument(..., help="Predictions JSON/JSONL"),
-    references: Path = typer.Argument(..., help="References JSON/JSONL"),
-    output_dir: Path = typer.Option("results/evaluation", help="Output directory"),
-    metrics: str = typer.Option("rouge,bertscore,egf", help="Comma-separated metrics"),
+    predictions: Path = typer.Argument(
+        ...,
+        help="Predictions JSON/JSONL",
+        exists=True,
+    ),
+    references: Path = typer.Argument(
+        ...,
+        help="References JSON/JSONL",
+        exists=True,
+    ),
+    output_dir: Path = typer.Option(
+        "results/evaluation",
+        "--output-dir",
+        "-o",
+        help="Output directory"
+    ),
+    metrics: str = typer.Option(
+        "rouge,bertscore,egf",
+        "--metrics",
+        "-m",
+        help="Comma-separated metrics"
+    ),
 ):
     """📊 Evaluate summaries with ROUGE, BERTScore, and EGF."""
     init_logger()
@@ -270,11 +416,33 @@ def evaluate(
 
 @app.command()
 def human_eval(
-    predictions: Path = typer.Argument(..., help="Predictions JSON/JSONL"),
-    references: Path = typer.Argument(..., help="References JSON/JSONL"),
-    output_file: Path = typer.Option("results/human_eval.csv", help="Output CSV"),
-    num_samples: int = typer.Option(50, help="Number of samples"),
-    randomize: bool = typer.Option(True, help="Randomize sample selection"),
+    predictions: Path = typer.Argument(
+        ...,
+        help="Predictions JSON/JSONL",
+        exists=True,
+    ),
+    references: Path = typer.Argument(
+        ...,
+        help="References JSON/JSONL",
+        exists=True,
+    ),
+    output_file: Path = typer.Option(
+        "results/human_eval.csv",
+        "--output",
+        "-o",
+        help="Output CSV"
+    ),
+    num_samples: int = typer.Option(
+        50,
+        "--num-samples",
+        "-n",
+        help="Number of samples"
+    ),
+    randomize: bool = typer.Option(
+        True,
+        "--randomize/--no-randomize",
+        help="Randomize sample selection"
+    ),
 ):
     """👥 Create human evaluation template (CSV)."""
     init_logger()
@@ -299,7 +467,12 @@ def human_eval(
 
 @app.command()
 def info(
-    config: Optional[Path] = typer.Option(None, help="Config file to display"),
+    config: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Config file to display"
+    ),
 ):
     """ℹ️  Display RALFS system information."""
     init_logger()
@@ -334,9 +507,24 @@ def info(
 
 @app.command()
 def pipeline(
-    dataset: str = typer.Option("arxiv", help="Dataset name"),
-    max_samples: Optional[int] = typer.Option(10, help="Max samples (for testing)"),
-    config: Optional[Path] = typer.Option(None, help="Config file"),
+    dataset: str = typer.Option(
+        "arxiv",
+        "--dataset",
+        "-d",
+        help="Dataset name"
+    ),
+    max_samples: Optional[int] = typer.Option(
+        10,
+        "--max-samples",
+        "-n",
+        help="Max samples (for testing)"
+    ),
+    config: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        help="Config file"
+    ),
 ):
     """🔄 Run complete pipeline: preprocess → index → train → evaluate."""
     init_logger()
