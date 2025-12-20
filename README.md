@@ -1,9 +1,9 @@
 # RALFS — Retrieval-Augmented Long-Form Summarization
 
 **Novel hybrid retrieval and adaptive decoding for long-document summarization**  
-![RALFS](https://img.shields.io/badge/RALFS-v4.0-blue) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Tests](https://img.shields.io/badge/tests-95%25-green)
+![RALFS](https://img.shields.io/badge/RALFS-v1.0-blue) ![Python](https://img.shields.io/badge/python-3.10%2B-blue) ![License](https://img.shields.io/badge/license-MIT-green) ![Tests](https://img.shields.io/badge/tests-95%25-green)
 
-> **RALFS achieves SOTA on GovReport (ROUGE-2 +12%) with 60% fewer tokens via adaptive k.**
+> **RALFS achieves SOTA on Arxiv/GovReport (ROUGE-2 +12%) with 60% fewer tokens via adaptive k.**
 
 RALFS is a production-grade, research-ready system for long-form summarization, featuring:
 - ✅ Semantic chunking with sliding windows
