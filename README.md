@@ -23,17 +23,20 @@ poetry install
 # Install Spacy model
 poetry run pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
 
+# Install ColBERT
+poetry run pip install git+https://github.com/stanford-futuredata/ColBERT.git
+
 # Preprocess data
-ralfs preprocess --dataset arxiv --max-samples 1000
+poetry run ralfs preprocess --dataset arxiv --max-samples 1000
 
 # Build retrieval indexes
-ralfs build-index --dataset arxiv
+poetry run ralfs build-index --dataset arxiv
 
 # Train with LoRA
-ralfs train --dataset arxiv --config configs/train/default.yaml
+poetry run ralfs train --dataset arxiv --config configs/train/default.yaml
 
 # Evaluate with statistical tests
-ralfs evaluate predictions.json references.json --metrics rouge bertscore egf
+poetry run ralfs evaluate predictions.json references.json --metrics rouge bertscore egf
 ```
 
 ### Key Features for Conference Papers

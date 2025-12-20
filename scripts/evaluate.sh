@@ -33,7 +33,7 @@ fi
 
 # Run evaluation
 echo "Running evaluation..."
-ralfs evaluate \
+poetry run ralfs evaluate \
     $PREDICTIONS \
     $REFERENCES \
     --output-dir $OUTPUT_DIR \

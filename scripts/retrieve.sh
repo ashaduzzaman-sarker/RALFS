@@ -13,7 +13,7 @@ echo "Query: $QUERY"
 echo "Dataset: $DATASET"
 echo "Top K: $K"
 
-ralfs search "$QUERY" \
+poetry run ralfs search "$QUERY" \
     --dataset $DATASET \
     --k $K
 

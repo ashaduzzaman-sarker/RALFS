@@ -14,7 +14,7 @@ echo "Input: $INPUT"
 echo "Checkpoint: $CHECKPOINT"
 echo "Output: $OUTPUT"
 
-ralfs generate $INPUT \
+poetry run ralfs generate $INPUT \
     --checkpoint $CHECKPOINT \
     --output-file $OUTPUT \
     --dataset $DATASET
