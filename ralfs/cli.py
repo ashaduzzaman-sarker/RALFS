@@ -17,7 +17,7 @@ Uses Typer for modern CLI with rich help messages and progress bars.
 
 import typer
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 from rich.console import Console
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
