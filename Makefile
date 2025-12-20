@@ -27,12 +27,14 @@ install:
 	@echo "Installing RALFS..."
 	pip install -e .
 	python -m spacy download en_core_web_sm
+	pip install git+https://github.com/stanford-futuredata/ColBERT.git
 	@echo "✓ Installation complete"
 
 install-dev:
 	@echo "Installing RALFS with dev dependencies..."
 	pip install -e ".[dev]"
 	python -m spacy download en_core_web_sm
+	pip install git+https://github.com/stanford-futuredata/ColBERT.git
 	pre-commit install
 	@echo "✓ Dev installation complete"
 
