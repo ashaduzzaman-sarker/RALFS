@@ -57,23 +57,24 @@ class ChunkerProtocol(Protocol):
 class BaseChunker(ABC):
     """Base class for all chunkers."""
     
-    def __init__(self, chunk_size: int = 512, overlap: int = 128, min_chunk_size: int = 100):
+    def __init__(self, chunk_size: int = 512, overlap: int = 128, min_chunk_size: int = None):
         """
         Initialize chunker.
         
         Args:
             chunk_size: Target chunk size in tokens
             overlap: Overlap size in tokens
-            min_chunk_size: Minimum chunk size (discard smaller chunks)
+            min_chunk_size: Minimum chunk size (discard smaller chunks). Defaults to chunk_size // 5.
         """
         self.chunk_size = chunk_size
         self.overlap = overlap
-        self.min_chunk_size = min_chunk_size
+        # Default min_chunk_size to 20% of chunk_size if not specified
+        self.min_chunk_size = min_chunk_size if min_chunk_size is not None else max(1, chunk_size // 5)
         
         if overlap >= chunk_size:
             raise ValueError(f"Overlap ({overlap}) must be < chunk_size ({chunk_size})")
-        if min_chunk_size > chunk_size:
-            raise ValueError(f"min_chunk_size ({min_chunk_size}) must be <= chunk_size ({chunk_size})")
+        if self.min_chunk_size > chunk_size:
+            raise ValueError(f"min_chunk_size ({self.min_chunk_size}) must be <= chunk_size ({chunk_size})")
     
     def _clean_text(self, text: str) -> str:
         """Clean and normalize text."""
