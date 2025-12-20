@@ -1,14 +1,23 @@
 # ============================================================================
-# File: ralfs/cli.py (COMPLETE)
+# File: ralfs/cli.py
 # ============================================================================
 """
-RALFS CLI - Complete implementation with all commands.
-Uses Typer for modern CLI with rich help messages.
+RALFS CLI - Command-line interface for Retrieval-Augmented Long-Form Summarization.
+
+This module provides a comprehensive CLI for running RALFS operations including:
+- Data preprocessing (download and chunk documents)
+- Index building (FAISS and BM25)
+- Model training with LoRA and adaptive FiD
+- Text retrieval and generation
+- Evaluation with multiple metrics
+- Human evaluation template creation
+
+Uses Typer for modern CLI with rich help messages and progress bars.
 """
 
 import typer
 from pathlib import Path
-from typing import Optional, List
+from typing import Optional
 from rich.console import Console
 from rich.table import Table
 from rich.progress import Progress, SpinnerColumn, TextColumn
@@ -16,7 +25,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 from ralfs.core.config import load_config
 from ralfs.core.logging import setup_logging, get_logger
 from ralfs.data.processor import run_preprocessing
-from ralfs.data.indexer import build_index
+from ralfs.data.indexer import build_index, IndexBuilder
 from ralfs.retriever import create_retriever
 from ralfs.generator import create_generator
 from ralfs.training.trainer import train_model
@@ -31,7 +40,7 @@ app = typer.Typer(
 )
 
 console = Console()
-logger = None  # Initialized in commands
+logger = None
 
 
 def init_logger():
@@ -40,6 +49,12 @@ def init_logger():
     if logger is None:
         setup_logging()
         logger = get_logger("ralfs.cli")
+
+
+def handle_error(error: Exception, message: str = "Error") -> None:
+    """Handle CLI errors with consistent formatting."""
+    console.print(f"[bold red]❌ {message}:[/bold red] {error}")
+    raise typer.Exit(1)
 
 
 @app.command()
@@ -51,31 +66,21 @@ def preprocess(
     force_rechunk: bool = typer.Option(False, "--force-rechunk", help="Force re-chunk"),
     config: Optional[Path] = typer.Option(None, help="Custom config YAML"),
 ):
-    """📦 Preprocess dataset: download + chunk."""
+    """📦 Preprocess dataset: download and chunk documents."""
     init_logger()
-    
     console.print(f"[bold green]Preprocessing {dataset} ({split})...[/bold green]")
     
     try:
-        # Load config
         cfg = load_config(config) if config else load_config()
         cfg.data.dataset = dataset
         cfg.data.split = split
         if max_samples:
             cfg.data.max_samples = max_samples
         
-        # Run preprocessing
-        output_path = run_preprocessing(
-            cfg,
-            force_download=force_download,
-            force_rechunk=force_rechunk,
-        )
-        
+        output_path = run_preprocessing(cfg, force_download=force_download, force_rechunk=force_rechunk)
         console.print(f"[bold green]✅ Chunks saved to:[/bold green] {output_path}")
-        
     except Exception as e:
-        console.print(f"[bold red]❌ Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        handle_error(e, "Preprocessing failed")
 
 
 @app.command()
@@ -87,27 +92,21 @@ def build_index(
 ):
     """🔍 Build retrieval indexes (FAISS + BM25)."""
     init_logger()
-    
     console.print(f"[bold blue]Building indexes for {dataset}...[/bold blue]")
     
     try:
-        # Load config
         cfg = load_config(config) if config else load_config()
         cfg.data.dataset = dataset
         cfg.data.split = split
         
-        # Build indexes
-        from ralfs.data.indexer import IndexBuilder
         builder = IndexBuilder(cfg)
         indexes = builder.build_all_indexes(force_rebuild=force)
         
         console.print("[bold green]✅ Indexes built successfully:[/bold green]")
         for index_type, path in indexes.items():
             console.print(f"  - {index_type}: {path}")
-        
     except Exception as e:
-        console.print(f"[bold red]❌ Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        handle_error(e, "Index building failed")
 
 
 @app.command()
@@ -120,33 +119,24 @@ def search(
 ):
     """🔍 Search for relevant chunks."""
     init_logger()
-    
     console.print(f"[bold blue]Searching for:[/bold blue] '{query}'")
     
     try:
-        # Load config
         cfg = load_config(config) if config else load_config()
         cfg.data.dataset = dataset
         cfg.retriever.type = retriever_type
         
-        # Create and load retriever
         ret = create_retriever(cfg)
         ret.load_index()
-        
-        # Search
         results = ret.retrieve(query, k=k)
         
-        # Display results
         console.print(f"\n[bold green]Found {len(results)} results:[/bold green]\n")
-        
         for result in results:
             console.print(f"[bold cyan]Rank {result.rank}:[/bold cyan] Score: {result.score:.4f}")
             console.print(f"  {result.text[:200]}...")
             console.print()
-        
     except Exception as e:
-        console.print(f"[bold red]❌ Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        handle_error(e, "Search failed")
 
 
 @app.command()
@@ -159,22 +149,18 @@ def train(
 ):
     """🔥 Train RALFS model with LoRA and adaptive FiD."""
     init_logger()
-    
     console.print("[bold red]Starting training...[/bold red]")
     
     try:
-        # Load config
         cfg = load_config(config)
         cfg.data.dataset = dataset
         
-        # Override output dir if specified
         if output_dir:
             if hasattr(cfg.train, 'training'):
                 cfg.train.training.output_dir = str(output_dir)
             else:
                 cfg.train.output_dir = str(output_dir)
         
-        # Override W&B if specified
         if wandb_project:
             if not hasattr(cfg.train, 'wandb'):
                 from dataclasses import dataclass
@@ -187,18 +173,14 @@ def train(
                 cfg.train.wandb.enabled = True
                 cfg.train.wandb.project = wandb_project
         
-        # Train
         stats = train_model(cfg)
         
         console.print("[bold green]✅ Training complete![/bold green]")
         console.print(f"Final train loss: {stats['train_losses'][-1]:.4f}")
-        
         if stats['eval_losses']:
             console.print(f"Final eval loss: {stats['eval_losses'][-1]:.4f}")
-        
     except Exception as e:
-        console.print(f"[bold red]❌ Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        handle_error(e, "Training failed")
 
 
 @app.command()
@@ -212,56 +194,36 @@ def generate(
 ):
     """✨ Generate summaries for input documents."""
     init_logger()
-    
     console.print(f"[bold magenta]Generating summaries from {input_file}...[/bold magenta]")
     
     try:
-        # Load config
         cfg = load_config(config) if config else load_config()
         cfg.data.dataset = dataset
         
-        # Load input documents
         if not input_file.exists():
             raise FileNotFoundError(f"Input file not found: {input_file}")
         
-        if input_file.suffix == '.jsonl':
-            documents = load_jsonl(input_file)
-        else:
-            documents = load_json(input_file)
-        
+        documents = load_jsonl(input_file) if input_file.suffix == '.jsonl' else load_json(input_file)
         console.print(f"Loaded {len(documents)} documents")
         
-        # Create retriever
         console.print("Loading retriever...")
         retriever = create_retriever(cfg)
         retriever.load_index()
         
-        # Create generator
         console.print(f"Loading generator from {checkpoint}...")
         generator = create_generator(cfg)
         
-        # TODO: Load checkpoint weights
-        # This requires loading the saved model state
-        
-        # Generate summaries
         results = []
-        
-        with Progress(
-            SpinnerColumn(),
-            TextColumn("[progress.description]{task.description}"),
-            console=console,
-        ) as progress:
+        with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
             task = progress.add_task("Generating summaries...", total=len(documents))
             
             for doc in documents:
                 doc_id = doc.get('id', 'unknown')
                 text = doc.get('text', '')
                 
-                # Retrieve relevant chunks
                 retrieved = retriever.retrieve(text[:1000], k=retriever_k)
                 passages = [{'text': r.text, 'score': r.score} for r in retrieved]
                 
-                # Generate summary
                 result = generator.generate(text[:1000], passages)
                 
                 results.append({
@@ -273,15 +235,11 @@ def generate(
                 
                 progress.update(task, advance=1)
         
-        # Save results
         output_file.parent.mkdir(parents=True, exist_ok=True)
         save_json(results, output_file)
-        
         console.print(f"[bold green]✅ Summaries saved to:[/bold green] {output_file}")
-        
     except Exception as e:
-        console.print(f"[bold red]❌ Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        handle_error(e, "Generation failed")
 
 
 @app.command()
@@ -293,14 +251,10 @@ def evaluate(
 ):
     """📊 Evaluate summaries with ROUGE, BERTScore, and EGF."""
     init_logger()
-    
     console.print("[bold cyan]Evaluating summaries...[/bold cyan]")
     
     try:
-        # Parse metrics
         metrics_list = [m.strip() for m in metrics.split(',')]
-        
-        # Run evaluation
         results = run_evaluation(
             predictions_path=predictions,
             references_path=references,
@@ -310,10 +264,8 @@ def evaluate(
         
         console.print("[bold green]✅ Evaluation complete![/bold green]")
         console.print(f"\nResults saved to: {output_dir}")
-        
     except Exception as e:
-        console.print(f"[bold red]❌ Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        handle_error(e, "Evaluation failed")
 
 
 @app.command()
@@ -326,22 +278,12 @@ def human_eval(
 ):
     """👥 Create human evaluation template (CSV)."""
     init_logger()
-    
     console.print("[bold yellow]Creating human evaluation template...[/bold yellow]")
     
     try:
-        # Load data
-        if predictions.suffix == '.jsonl':
-            pred_data = load_jsonl(predictions)
-        else:
-            pred_data = load_json(predictions)
+        pred_data = load_jsonl(predictions) if predictions.suffix == '.jsonl' else load_json(predictions)
+        ref_data = load_jsonl(references) if references.suffix == '.jsonl' else load_json(references)
         
-        if references.suffix == '.jsonl':
-            ref_data = load_jsonl(references)
-        else:
-            ref_data = load_json(references)
-        
-        # Create template
         output_path = create_human_eval_template(
             predictions=pred_data,
             references=ref_data,
@@ -351,10 +293,8 @@ def human_eval(
         )
         
         console.print(f"[bold green]✅ Template saved to:[/bold green] {output_path}")
-        
     except Exception as e:
-        console.print(f"[bold red]❌ Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        handle_error(e, "Human eval template creation failed")
 
 
 @app.command()
@@ -400,39 +340,30 @@ def pipeline(
 ):
     """🔄 Run complete pipeline: preprocess → index → train → evaluate."""
     init_logger()
-    
     console.print("[bold magenta]Running complete RALFS pipeline...[/bold magenta]")
     
     try:
-        # Load config
         cfg = load_config(config) if config else load_config()
         cfg.data.dataset = dataset
         if max_samples:
             cfg.data.max_samples = max_samples
         
-        # Step 1: Preprocess
         console.print("\n[bold blue]Step 1: Preprocessing...[/bold blue]")
         run_preprocessing(cfg)
         
-        # Step 2: Build index
         console.print("\n[bold blue]Step 2: Building indexes...[/bold blue]")
-        from ralfs.data.indexer import IndexBuilder
         builder = IndexBuilder(cfg)
         builder.build_all_indexes()
         
-        # Step 3: Train
         console.print("\n[bold blue]Step 3: Training model...[/bold blue]")
         train_model(cfg)
         
-        # Step 4: Evaluate
         console.print("\n[bold blue]Step 4: Evaluation...[/bold blue]")
         # TODO: Generate predictions and evaluate
         
         console.print("\n[bold green]✅ Pipeline complete![/bold green]")
-        
     except Exception as e:
-        console.print(f"[bold red]❌ Error:[/bold red] {e}")
-        raise typer.Exit(1)
+        handle_error(e, "Pipeline failed")
 
 
 if __name__ == "__main__":
