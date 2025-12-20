@@ -67,89 +67,118 @@ ralfs evaluate predictions.json references.json --metrics rouge bertscore egf
 
 ```
 RALFS/
-├── src/
-│   └── ralfs/                         
+├── ralfs/                              # Main package
+│   ├── __init__.py
+│   ├── cli.py                          # Command-line interface
+│   ├── core/                           # Core utilities
+│   │   ├── __init__.py
+│   │   ├── config.py                   # Configuration management
+│   │   ├── logging.py                  # Logging utilities
+│   │   └── constants.py                # Constants and defaults
+│   ├── data/                           # Data processing
+│   │   ├── __init__.py
+│   │   ├── downloader.py               # Dataset downloading
+│   │   ├── chunker.py                  # Text chunking
+│   │   ├── processor.py                # Document preprocessing
+│   │   └── indexer.py                  # Index building
+│   ├── retriever/                      # Retrieval modules
+│   │   ├── __init__.py
+│   │   ├── base.py                     # Base retriever
+│   │   ├── dense.py                    # Dense retrieval (FAISS)
+│   │   ├── sparse.py                   # Sparse retrieval (BM25)
+│   │   ├── colbert.py                  # ColBERT retrieval
+│   │   ├── hybrid.py                   # Hybrid retrieval
+│   │   ├── factory.py                  # Retriever factory
+│   │   ├── utils.py                    # Retrieval utilities
+│   │   └── reranker.py                 # Cross-encoder reranking
+│   ├── generator/                      # Generation modules
+│   │   ├── __init__.py
+│   │   ├── base.py                     # Base generator
+│   │   ├── fid.py                      # FiD generation model
+│   │   ├── adaptive_k.py               # Adaptive k selection
+│   │   └── factory.py                  # Generator factory
+│   ├── evaluation/                     # Evaluation modules
+│   │   ├── __init__.py
+│   │   ├── metrics.py                  # ROUGE, BERTScore
+│   │   ├── faithfulness.py             # Entity Grid Faithfulness
+│   │   ├── main.py                     # Main evaluator
+│   │   └── human.py                    # Human evaluation
+│   ├── training/                       # Training modules
+│   │   ├── __init__.py
+│   │   ├── trainer.py                  # Main trainer with LoRA
+│   │   └── dataset.py                  # FiD dataset
+│   └── utils/                          # Utilities
 │       ├── __init__.py
-│       ├── cli.py
-│       ├── utils/
-│       │   ├── __init__.py
-│       │   └── io.py
-│       ├── core/
-│       │   ├── __init__.py
-│       │   ├── config.py              
-│       │   ├── logging.py            
-│       │   └── constants.py
-│       ├── data/
-│       │   ├── __init__.py
-│       │   ├── downloader.py
-│       │   ├── chunker.py
-│       │   ├── processor.py
-│       │   └── indexer.py
-│       ├── retriever/
-│       │   ├── __init__.py
-│       │   ├── base.py
-│       │   ├── dense.py
-│       │   ├── sparse.py
-│       │   ├── colbert.py
-│       │   ├── hybrid.py
-│       │   ├── factory.py
-│       │   ├── utils.py
-│       │   └── reranker.py
-│       ├── generator/
-│       │   ├── __init__.py
-│       │   ├── fid.py
-│       │   ├── factory.py
-│       │   └── base.py
-│       ├── evaluation/
-│       │   ├── __init__.py
-│       │   ├── metrics.py
-│       │   ├── faithfulness.py
-│       │   ├── main.py
-│       │   └── human.py
-│       └── training/
-│           ├── __init__.py
-│           ├── trainer.py
-│           └── dataset.py
-├── configs/
-│   ├── data/
-│   │   └── default.yaml
-│   ├── retriever/
+│       ├── io.py                       # I/O utilities
+│       └── reproducibility.py          # Seed setting & tracking
+├── configs/                            # Configuration files
+│   ├── __init__.py
+│   ├── ralfs.yaml                      # Main config
+│   ├── data/                           # Data configs
+│   │   ├── default.yaml
+│   │   ├── arxiv.yaml
+│   │   ├── govreport.yaml
+│   │   └── debug.yaml
+│   ├── retriever/                      # Retriever configs
+│   │   ├── dense.yaml
+│   │   ├── sparse.yaml
 │   │   └── hybrid.yaml
-│   ├── generator/
-│   │   └── fid.yaml
-│   ├── train/
-│   │   └── default.yaml
-│   ├── ralfs.yaml
-│   └── __init__.py  
-├── scripts/
-│   ├── preprocess.sh
-│   ├── build_index.sh
-│   ├── train.sh
-│   ├── generate.sh
-│   ├── evaluate.sh
-│   └── pipeline.sh
-├── examples/
-│   ├── retrieval_demo.ipynb
-│   └── full_pipeline_demo.ipynb
-├── tests/
-│   ├── test_data.py
-│   ├── test_retriever.py
-│   ├── test_generator.py
-│   ├── test_evaluation.py
-│   └── test_pipeline.py
-├── paper/
-│   ├── main.tex
-│   └── figures/
-├── results/
-├── checkpoints/
-├── data/
-│   ├── raw/
-│   ├── processed/
-│   └── index/
-├── pyproject.toml
-├── README.md
-├── LICENSE
-└── CITATION.cff                     
+│   ├── generator/                      # Generator configs
+│   │   ├── fid.yaml
+│   │   ├── fid_base.yaml
+│   │   └── fid_xl.yaml
+│   ├── train/                          # Training configs
+│   │   ├── default.yaml
+│   │   ├── debug.yaml
+│   │   ├── a100.yaml
+│   │   └── multi_gpu.yaml
+│   └── experiment/                     # Experiment configs
+│       ├── baseline.yaml
+│       └── full_system.yaml
+├── scripts/                            # Utility scripts
+│   ├── preprocess.sh                   # Data preprocessing
+│   ├── build_index.sh                  # Build retrieval index
+│   ├── retrieve.sh                     # Run retrieval
+│   ├── generate.sh                     # Run generation
+│   ├── train.sh                        # Train model
+│   ├── evaluate.sh                     # Evaluate results
+│   ├── pipeline.sh                     # Full pipeline
+│   ├── run_ablation_study.py           # Ablation study automation
+│   ├── run_human_eval.sh               # Human evaluation
+│   ├── setup_configs.sh                # Setup configurations
+│   └── setup_colab.sh                  # Colab setup
+├── examples/                           # Usage examples
+│   └── retriever_demo.py               # Retrieval demo
+├── notebook/                           # Jupyter notebooks
+│   └── RALFS.ipynb                     # Demo notebook
+├── tests/                              # Test suite
+│   ├── test_config.py                  # Config tests
+│   ├── test_constants.py               # Constants tests
+│   ├── test_io.py                      # I/O tests
+│   ├── test_logging.py                 # Logging tests
+│   ├── test_data.py                    # Data module tests
+│   ├── test_data_integration.py        # Data integration tests
+│   ├── test_retriever.py               # Retriever tests
+│   ├── test_generator.py               # Generator tests
+│   ├── test_generator_integration.py   # Generator integration tests
+│   ├── test_evaluation.py              # Evaluation tests
+│   ├── test_training.py                # Training tests
+│   ├── test_pipeline.py                # Pipeline tests
+│   ├── test_factory.py                 # Factory tests
+│   ├── test_utils.py                   # Utils tests
+│   ├── test_configs.py                 # Config loading tests
+│   └── test_setup.py                   # Setup tests
+├── docs/                               # Documentation
+│   ├── API.md                          # API documentation
+│   └── TRAINING_GUIDE.md               # Training guide
+├── pyproject.toml                      # Project metadata & dependencies
+├── pytest.ini                          # Pytest configuration
+├── Makefile                            # Common tasks
+├── .env.example                        # Environment template
+├── .gitignore                          # Git ignore rules
+├── README.md                           # This file
+├── LICENSE                             # MIT License
+└── CITATION.cff                        # Citation metadata
 ```
 
 ### Results (ACL 2026 Baseline)
