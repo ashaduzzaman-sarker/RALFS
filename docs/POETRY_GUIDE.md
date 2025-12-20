@@ -177,10 +177,19 @@ RALFS requires Python 3.10-3.12. Check your Python version:
 python3 --version
 ```
 
-If needed, specify the Python version for Poetry:
+If needed, specify the Python version for Poetry (use 3.10, 3.11, or 3.12):
 
 ```bash
+# Example: Use Python 3.10
 poetry env use python3.10
+
+# Or use Python 3.11
+poetry env use python3.11
+
+# Or use Python 3.12
+poetry env use python3.12
+
+# Then install dependencies
 poetry install
 ```
 
