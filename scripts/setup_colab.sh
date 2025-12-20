@@ -10,7 +10,8 @@ curl -sSL https://install.python-poetry.org | python3 -
 # Add Poetry to PATH
 export PATH="$HOME/.local/bin:$PATH"
 
-# Verify Poetry installation
+# Verify Poetry installation before proceeding
+# This ensures we fail fast if Poetry installation didn't work correctly
 if ! command -v poetry &> /dev/null; then
     echo "❌ Poetry installation failed. Please install Poetry manually."
     exit 1
@@ -18,7 +19,8 @@ fi
 
 echo "✓ Poetry installed successfully"
 
-# Install dependencies
+# Install dependencies using Poetry
+# Now that Poetry is verified to be available, we can safely use it
 echo "📚 Installing dependencies with Poetry..."
 poetry install
 

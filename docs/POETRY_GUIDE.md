@@ -29,14 +29,14 @@ For other installation methods, see [Poetry Installation Guide](https://python-p
 ### 1. Install Dependencies
 
 ```bash
-# Install all dependencies (runtime + dev)
+# Install runtime dependencies (default)
 poetry install
 
-# Install only runtime dependencies
-poetry install --without dev
-
-# Install with specific extras
+# Install with dev dependencies
 poetry install --with dev
+
+# Install without dev dependencies (explicit)
+poetry install --without dev
 ```
 
 ### 2. Running Commands
@@ -230,7 +230,17 @@ In CI/CD pipelines (GitHub Actions, GitLab CI, etc.):
 ```yaml
 # Example GitHub Actions workflow
 - name: Install Poetry
-  run: pip install poetry
+  run: |
+    curl -sSL https://install.python-poetry.org | python3 -
+    echo "$HOME/.local/bin" >> $GITHUB_PATH
+
+# Or use the official Poetry action
+- name: Install Poetry (Alternative)
+  uses: snok/install-poetry@v1
+  with:
+    version: latest
+    virtualenvs-create: true
+    virtualenvs-in-project: true
 
 - name: Install dependencies
   run: poetry install
