@@ -7,6 +7,19 @@ Entity Grid Faithfulness (EGF) - Novel coherence and faithfulness metric.
 This metric evaluates summary faithfulness by analyzing entity transitions
 across sentences, inspired by the Barzilay & Lapata (2008) entity grid model.
 
+Mathematical Formulation:
+    EGF = α·E_overlap + β·T_similarity + γ·C_score
+    
+    where:
+    - E_overlap: Jaccard similarity of entities between reference and generated
+    - T_similarity: 1 - JS_divergence(P_ref || P_gen) for transition distributions
+    - C_score: Normalized coherence score based on transition quality
+    - α=0.4, β=0.4, γ=0.2 (empirically tuned weights)
+
+Entity transitions are classified as:
+    - Coherent: {SS, SO, SX, OS, OO} (maintain entity focus)
+    - Incoherent: {--, -S, -O, -X, S-, O-, X-} (abrupt changes)
+
 Citation:
     Barzilay, R., & Lapata, M. (2008). Modeling local coherence: An entity-based approach.
     Computational Linguistics, 34(1), 1-34.

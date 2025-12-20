@@ -5,17 +5,19 @@
 Complete evaluation pipeline for RALFS.
 
 Evaluates generated summaries with ROUGE, BERTScore, and EGF metrics.
-Supports batch evaluation, statistical analysis, and export to multiple formats.
+Supports batch evaluation, statistical analysis (bootstrap confidence intervals,
+paired t-tests), and export to multiple formats suitable for conference papers.
 """
 
 from __future__ import annotations
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, Tuple
 from pathlib import Path
 import json
 import time
 from dataclasses import dataclass, asdict
 import numpy as np
 from tqdm.auto import tqdm
+from scipy import stats
 
 from ralfs.core.logging import get_logger
 from ralfs.utils.io import load_json, save_json, load_jsonl
@@ -45,18 +47,28 @@ class EvaluationResult:
 
 @dataclass
 class AggregatedResults:
-    """Aggregated evaluation results."""
+    """Aggregated evaluation results with confidence intervals."""
     num_samples: int
     rouge1_mean: float
     rouge1_std: float
+    rouge1_ci_lower: float
+    rouge1_ci_upper: float
     rouge2_mean: float
     rouge2_std: float
+    rouge2_ci_lower: float
+    rouge2_ci_upper: float
     rougeL_mean: float
     rougeL_std: float
+    rougeL_ci_lower: float
+    rougeL_ci_upper: float
     bertscore_f1_mean: float
     bertscore_f1_std: float
+    bertscore_f1_ci_lower: float
+    bertscore_f1_ci_upper: float
     egf_mean: float
     egf_std: float
+    egf_ci_lower: float
+    egf_ci_upper: float
     evaluation_time: float
     
     def to_dict(self) -> Dict[str, Any]:
@@ -64,25 +76,30 @@ class AggregatedResults:
         return asdict(self)
     
     def __str__(self) -> str:
-        """Pretty print results."""
+        """Pretty print results with confidence intervals."""
         lines = [
-            "=" * 60,
-            "EVALUATION RESULTS",
-            "=" * 60,
+            "=" * 70,
+            "EVALUATION RESULTS (95% Confidence Intervals)",
+            "=" * 70,
             f"Samples: {self.num_samples}",
             f"Evaluation Time: {self.evaluation_time:.2f}s",
             "",
             "ROUGE Scores:",
-            f"  ROUGE-1:  {self.rouge1_mean:.4f} ± {self.rouge1_std:.4f}",
-            f"  ROUGE-2:  {self.rouge2_mean:.4f} ± {self.rouge2_std:.4f}",
-            f"  ROUGE-L:  {self.rougeL_mean:.4f} ± {self.rougeL_std:.4f}",
+            f"  ROUGE-1:  {self.rouge1_mean:.4f} ± {self.rouge1_std:.4f}  "
+            f"[{self.rouge1_ci_lower:.4f}, {self.rouge1_ci_upper:.4f}]",
+            f"  ROUGE-2:  {self.rouge2_mean:.4f} ± {self.rouge2_std:.4f}  "
+            f"[{self.rouge2_ci_lower:.4f}, {self.rouge2_ci_upper:.4f}]",
+            f"  ROUGE-L:  {self.rougeL_mean:.4f} ± {self.rougeL_std:.4f}  "
+            f"[{self.rougeL_ci_lower:.4f}, {self.rougeL_ci_upper:.4f}]",
             "",
             "BERTScore:",
-            f"  F1:       {self.bertscore_f1_mean:.4f} ± {self.bertscore_f1_std:.4f}",
+            f"  F1:       {self.bertscore_f1_mean:.4f} ± {self.bertscore_f1_std:.4f}  "
+            f"[{self.bertscore_f1_ci_lower:.4f}, {self.bertscore_f1_ci_upper:.4f}]",
             "",
             "Entity Grid Faithfulness (EGF):",
-            f"  EGF:      {self.egf_mean:.4f} ± {self.egf_std:.4f}",
-            "=" * 60,
+            f"  EGF:      {self.egf_mean:.4f} ± {self.egf_std:.4f}  "
+            f"[{self.egf_ci_lower:.4f}, {self.egf_ci_upper:.4f}]",
+            "=" * 70,
         ]
         return "\n".join(lines)
 
@@ -222,27 +239,86 @@ class RALFSEvaluator:
         results: List[EvaluationResult],
         evaluation_time: float,
     ) -> AggregatedResults:
-        """Compute aggregated statistics."""
+        """
+        Compute aggregated statistics with bootstrap confidence intervals.
+        
+        Uses bootstrap resampling (1000 iterations) to compute 95% confidence
+        intervals for all metrics, providing robust uncertainty estimates for
+        conference paper reporting.
+        """
         rouge1_scores = [r.rouge1 for r in results]
         rouge2_scores = [r.rouge2 for r in results]
         rougeL_scores = [r.rougeL for r in results]
         bertscore_scores = [r.bertscore_f1 for r in results]
         egf_scores = [r.egf for r in results]
         
+        # Compute bootstrap confidence intervals
+        rouge1_ci = self._bootstrap_ci(rouge1_scores)
+        rouge2_ci = self._bootstrap_ci(rouge2_scores)
+        rougeL_ci = self._bootstrap_ci(rougeL_scores)
+        bertscore_ci = self._bootstrap_ci(bertscore_scores)
+        egf_ci = self._bootstrap_ci(egf_scores)
+        
         return AggregatedResults(
             num_samples=len(results),
             rouge1_mean=np.mean(rouge1_scores),
             rouge1_std=np.std(rouge1_scores),
+            rouge1_ci_lower=rouge1_ci[0],
+            rouge1_ci_upper=rouge1_ci[1],
             rouge2_mean=np.mean(rouge2_scores),
             rouge2_std=np.std(rouge2_scores),
+            rouge2_ci_lower=rouge2_ci[0],
+            rouge2_ci_upper=rouge2_ci[1],
             rougeL_mean=np.mean(rougeL_scores),
             rougeL_std=np.std(rougeL_scores),
+            rougeL_ci_lower=rougeL_ci[0],
+            rougeL_ci_upper=rougeL_ci[1],
             bertscore_f1_mean=np.mean(bertscore_scores),
             bertscore_f1_std=np.std(bertscore_scores),
+            bertscore_f1_ci_lower=bertscore_ci[0],
+            bertscore_f1_ci_upper=bertscore_ci[1],
             egf_mean=np.mean(egf_scores),
             egf_std=np.std(egf_scores),
+            egf_ci_lower=egf_ci[0],
+            egf_ci_upper=egf_ci[1],
             evaluation_time=evaluation_time,
         )
+    
+    def _bootstrap_ci(
+        self,
+        scores: List[float],
+        n_bootstrap: int = 1000,
+        confidence: float = 0.95,
+    ) -> Tuple[float, float]:
+        """
+        Compute bootstrap confidence interval.
+        
+        Args:
+            scores: List of metric scores
+            n_bootstrap: Number of bootstrap samples
+            confidence: Confidence level (default: 0.95 for 95% CI)
+        
+        Returns:
+            Tuple of (lower_bound, upper_bound)
+        """
+        if len(scores) < 2:
+            mean = np.mean(scores) if scores else 0.0
+            return (mean, mean)
+        
+        bootstrap_means = []
+        n = len(scores)
+        
+        for _ in range(n_bootstrap):
+            # Resample with replacement
+            sample = np.random.choice(scores, size=n, replace=True)
+            bootstrap_means.append(np.mean(sample))
+        
+        # Compute percentiles
+        alpha = 1 - confidence
+        lower = np.percentile(bootstrap_means, 100 * alpha / 2)
+        upper = np.percentile(bootstrap_means, 100 * (1 - alpha / 2))
+        
+        return (lower, upper)
     
     def save_results(
         self,
@@ -303,20 +379,20 @@ class RALFSEvaluator:
         logger.info(f"Saved CSV: {path}")
     
     def _save_latex(self, aggregated: AggregatedResults, path: Path):
-        """Save aggregated results as LaTeX table."""
+        """Save aggregated results as LaTeX table with confidence intervals."""
         latex = f"""\\begin{{table}}[t]
 \\centering
 \\caption{{RALFS Evaluation Results (n={aggregated.num_samples})}}
-\\label{{tab:results}}
+\\label{{tab:ralfs-results}}
 \\begin{{tabular}}{{lcc}}
 \\toprule
-\\textbf{{Metric}} & \\textbf{{Mean}} & \\textbf{{Std}} \\\\
+\\textbf{{Metric}} & \\textbf{{Mean ± Std}} & \\textbf{{95\\% CI}} \\\\
 \\midrule
-ROUGE-1 & {aggregated.rouge1_mean:.4f} & {aggregated.rouge1_std:.4f} \\\\
-ROUGE-2 & {aggregated.rouge2_mean:.4f} & {aggregated.rouge2_std:.4f} \\\\
-ROUGE-L & {aggregated.rougeL_mean:.4f} & {aggregated.rougeL_std:.4f} \\\\
-BERTScore & {aggregated.bertscore_f1_mean:.4f} & {aggregated.bertscore_f1_std:.4f} \\\\
-EGF & {aggregated.egf_mean:.4f} & {aggregated.egf_std:.4f} \\\\
+ROUGE-1 & {aggregated.rouge1_mean:.4f} $\\pm$ {aggregated.rouge1_std:.4f} & [{aggregated.rouge1_ci_lower:.4f}, {aggregated.rouge1_ci_upper:.4f}] \\\\
+ROUGE-2 & {aggregated.rouge2_mean:.4f} $\\pm$ {aggregated.rouge2_std:.4f} & [{aggregated.rouge2_ci_lower:.4f}, {aggregated.rouge2_ci_upper:.4f}] \\\\
+ROUGE-L & {aggregated.rougeL_mean:.4f} $\\pm$ {aggregated.rougeL_std:.4f} & [{aggregated.rougeL_ci_lower:.4f}, {aggregated.rougeL_ci_upper:.4f}] \\\\
+BERTScore-F1 & {aggregated.bertscore_f1_mean:.4f} $\\pm$ {aggregated.bertscore_f1_std:.4f} & [{aggregated.bertscore_f1_ci_lower:.4f}, {aggregated.bertscore_f1_ci_upper:.4f}] \\\\
+EGF & {aggregated.egf_mean:.4f} $\\pm$ {aggregated.egf_std:.4f} & [{aggregated.egf_ci_lower:.4f}, {aggregated.egf_ci_upper:.4f}] \\\\
 \\bottomrule
 \\end{{tabular}}
 \\end{{table}}
@@ -326,6 +402,109 @@ EGF & {aggregated.egf_mean:.4f} & {aggregated.egf_std:.4f} \\\\
             f.write(latex)
         
         logger.info(f"Saved LaTeX table: {path}")
+
+
+def compare_systems(
+    system1_results: List[EvaluationResult],
+    system2_results: List[EvaluationResult],
+    alpha: float = 0.05,
+) -> Dict[str, Any]:
+    """
+    Compare two systems using paired statistical tests.
+    
+    Performs paired t-test and bootstrap significance test to determine
+    if differences between systems are statistically significant.
+    
+    Args:
+        system1_results: Results from first system
+        system2_results: Results from second system
+        alpha: Significance level (default: 0.05)
+    
+    Returns:
+        Dictionary with test results and p-values
+    
+    Example:
+        >>> baseline_results = evaluate_system("baseline", test_data)
+        >>> ralfs_results = evaluate_system("ralfs", test_data)
+        >>> comparison = compare_systems(baseline_results, ralfs_results)
+        >>> print(f"ROUGE-L improvement: {comparison['rougeL_diff_mean']:.4f}")
+        >>> print(f"Significant: {comparison['rougeL_significant']}")
+    """
+    if len(system1_results) != len(system2_results):
+        raise ValueError("Systems must have same number of samples")
+    
+    # Extract scores
+    sys1_r1 = [r.rouge1 for r in system1_results]
+    sys1_r2 = [r.rouge2 for r in system1_results]
+    sys1_rL = [r.rougeL for r in system1_results]
+    sys1_bert = [r.bertscore_f1 for r in system1_results]
+    sys1_egf = [r.egf for r in system1_results]
+    
+    sys2_r1 = [r.rouge1 for r in system2_results]
+    sys2_r2 = [r.rouge2 for r in system2_results]
+    sys2_rL = [r.rougeL for r in system2_results]
+    sys2_bert = [r.bertscore_f1 for r in system2_results]
+    sys2_egf = [r.egf for r in system2_results]
+    
+    def paired_test(scores1, scores2, metric_name):
+        """Perform paired t-test and compute difference statistics."""
+        diffs = np.array(scores2) - np.array(scores1)
+        
+        # Paired t-test
+        t_stat, p_value = stats.ttest_rel(scores2, scores1)
+        
+        # Effect size (Cohen's d)
+        cohens_d = np.mean(diffs) / (np.std(diffs) + 1e-10)
+        
+        # Bootstrap test
+        n_bootstrap = 10000
+        bootstrap_diffs = []
+        n = len(scores1)
+        
+        for _ in range(n_bootstrap):
+            indices = np.random.choice(n, size=n, replace=True)
+            sample1 = [scores1[i] for i in indices]
+            sample2 = [scores2[i] for i in indices]
+            bootstrap_diffs.append(np.mean(sample2) - np.mean(sample1))
+        
+        # Bootstrap p-value (two-tailed)
+        bootstrap_p = 2 * min(
+            np.mean(np.array(bootstrap_diffs) <= 0),
+            np.mean(np.array(bootstrap_diffs) >= 0)
+        )
+        
+        return {
+            f'{metric_name}_diff_mean': np.mean(diffs),
+            f'{metric_name}_diff_std': np.std(diffs),
+            f'{metric_name}_t_statistic': t_stat,
+            f'{metric_name}_p_value': p_value,
+            f'{metric_name}_bootstrap_p_value': bootstrap_p,
+            f'{metric_name}_cohens_d': cohens_d,
+            f'{metric_name}_significant': p_value < alpha,
+            f'{metric_name}_significant_bootstrap': bootstrap_p < alpha,
+        }
+    
+    # Run tests for all metrics
+    results = {}
+    results.update(paired_test(sys1_r1, sys2_r1, 'rouge1'))
+    results.update(paired_test(sys1_r2, sys2_r2, 'rouge2'))
+    results.update(paired_test(sys1_rL, sys2_rL, 'rougeL'))
+    results.update(paired_test(sys1_bert, sys2_bert, 'bertscore'))
+    results.update(paired_test(sys1_egf, sys2_egf, 'egf'))
+    
+    # Summary
+    results['n_samples'] = len(system1_results)
+    results['alpha'] = alpha
+    
+    logger.info("Statistical Significance Test Results:")
+    logger.info(f"  ROUGE-L: Δ={results['rougeL_diff_mean']:.4f}, "
+                f"p={results['rougeL_p_value']:.4f}, "
+                f"sig={'Yes' if results['rougeL_significant'] else 'No'}")
+    logger.info(f"  ROUGE-2: Δ={results['rouge2_diff_mean']:.4f}, "
+                f"p={results['rouge2_p_value']:.4f}, "
+                f"sig={'Yes' if results['rouge2_significant'] else 'No'}")
+    
+    return results
 
 
 def run_evaluation(
