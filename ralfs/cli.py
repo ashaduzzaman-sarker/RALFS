@@ -62,8 +62,8 @@ def preprocess(
     dataset: str = typer.Option("arxiv", help="Dataset name: arxiv, pubmed, govreport"),
     split: str = typer.Option("train", help="Data split: train, validation, test"),
     max_samples: Optional[int] = typer.Option(None, help="Max samples (for debugging)"),
-    force_download: bool = typer.Option(False, "--force-download", help="Force re-download"),
-    force_rechunk: bool = typer.Option(False, "--force-rechunk", help="Force re-chunk"),
+    force_download: bool = typer.Option(False, help="Force re-download"),
+    force_rechunk: bool = typer.Option(False, help="Force re-chunk"),
     config: Optional[Path] = typer.Option(None, help="Custom config YAML"),
 ):
     """📦 Preprocess dataset: download and chunk documents."""
@@ -87,7 +87,7 @@ def preprocess(
 def build_index(
     dataset: str = typer.Option("arxiv", help="Dataset name"),
     split: str = typer.Option("train", help="Data split"),
-    force: bool = typer.Option(False, "--force", help="Force rebuild"),
+    force: bool = typer.Option(False, help="Force rebuild"),
     config: Optional[Path] = typer.Option(None, help="Config file"),
 ):
     """🔍 Build retrieval indexes (FAISS + BM25)."""
