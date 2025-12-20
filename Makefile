@@ -26,15 +26,13 @@ help:
 install:
 	@echo "Installing RALFS..."
 	pip install -e .
-	python -m spacy download en_core_web_sm
-	pip install git+https://github.com/stanford-futuredata/ColBERT.git
+	pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
 	@echo "✓ Installation complete"
 
 install-dev:
 	@echo "Installing RALFS with dev dependencies..."
 	pip install -e ".[dev]"
-	python -m spacy download en_core_web_sm
-	pip install git+https://github.com/stanford-futuredata/ColBERT.git
+	pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
 	pre-commit install
 	@echo "✓ Dev installation complete"
 

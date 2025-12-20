@@ -18,11 +18,11 @@ poetry install --no-root -q
 
 # Install Spacy model
 echo "🧠 Downloading Spacy model..."
-python -m spacy download en_core_web_sm
+poetry run pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
 
 # Install ColBERT (if not available via pip)
-echo "🔍 Installing ColBERT..."
-pip install git+https://github.com/stanford-futuredata/ColBERT.git || echo "ColBERT install failed, will use alternative"
+# echo "🔍 Installing ColBERT..."
+# poetry run pip install git+https://github.com/stanford-futuredata/ColBERT.git
 
 # Create data directories
 echo "📁 Creating data directories..."

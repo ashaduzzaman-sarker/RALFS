@@ -38,11 +38,13 @@ rank-bm25 = "0.2.2"
 pyserini = "0.23.0"  
 
 # ColBERT (use official Stanford NLP implementation)
-# Install via: pip install git+https://github.com/stanford-futuredata/ColBERT.git
+# Install via: poetry run pip install git+https://github.com/stanford-futuredata/ColBERT.git
 # colbert-ai = "0.2.20"  # ← Use this if available, else manual install
 
 # NLP Tools
 spacy = "3.7.5"
+# Install Spacy model via: poetry run pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
+# Note: Using en_core_web_sm-3.7.1 model (tested and working) with spacy 3.7.5 library
 nltk = "3.8.1"
 scikit-learn = "1.5.1"
 
