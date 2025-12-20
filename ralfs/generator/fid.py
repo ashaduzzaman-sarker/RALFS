@@ -119,7 +119,9 @@ class FiDGenerator(BaseGenerator):
             if enabled:
                 min_k = getattr(self.adaptive_config, 'min_k', 5)
                 max_k = max_k_override or getattr(self.adaptive_config, 'max_k', 30)
+                min_k = min(min_k, max_k)  # Ensure min_k <= max_k
                 default_k = getattr(self.adaptive_config, 'default_k', 20)
+                default_k = min(default_k, max_k)  # Ensure default_k <= max_k
                 strategy = getattr(self.adaptive_config, 'strategy', 'score_dropoff')
                 
                 self.adaptive_k_selector = AdaptiveKSelector(
@@ -138,6 +140,7 @@ class FiDGenerator(BaseGenerator):
             # Check if max_k is set at generator config level
             min_k = getattr(gen_config, 'adaptive_k_min', 5)
             max_k = max_k_override or getattr(gen_config, 'adaptive_k_max', 30)
+            min_k = min(min_k, max_k)  # Ensure min_k <= max_k
             default_k = min(20, max_k)  # Ensure default_k <= max_k
             
             # Default: use adaptive k
