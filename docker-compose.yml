@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  ralfs:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ralfs:latest
+    container_name: ralfs-app
+    volumes:
+      # Mount data directories for persistence
+      - ./data:/app/data
+      - ./results:/app/results
+      - ./outputs:/app/outputs
+      - ./checkpoints:/app/checkpoints
+      # Mount configs if you want to override them
+      - ./configs:/app/configs
+    environment:
+      - PYTHONUNBUFFERED=1
+      # Add any other environment variables here
+      # - WANDB_API_KEY=${WANDB_API_KEY}
+      # - HF_TOKEN=${HF_TOKEN}
+    command: ["--help"]
+    # Uncomment to enable GPU support (requires nvidia-docker)
+    # runtime: nvidia
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: 1
+    #           capabilities: [gpu]

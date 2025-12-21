@@ -366,7 +366,8 @@ def pipeline(
                 generator = create_generator(cfg)
                 generator.load_checkpoint(str(checkpoint))
                 
-                val_docs = load_jsonl(val_data_path)[:min(len(val_docs), max_samples or 100)]
+                val_docs = load_jsonl(val_data_path)
+                val_docs = val_docs[:min(len(val_docs), max_samples or 100)]
                 
                 predictions_path = Path("results") / "predictions.json"
                 predictions_path.parent.mkdir(parents=True, exist_ok=True)
