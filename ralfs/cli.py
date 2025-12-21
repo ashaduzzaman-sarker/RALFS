@@ -312,31 +312,110 @@ def info(
 @app.command()
 def pipeline(
     dataset: str = typer.Option("arxiv", "--dataset", "-d", help="Dataset name"),
+    split: str = typer.Option("train", "--split", "-s", help="Data split for training"),
     max_samples: Optional[int] = typer.Option(None, "--max-samples", "-n", help="Max samples (for testing)"),
     config: Optional[Path] = typer.Option(None, "--config", "-c", help="Config file"),
+    skip_train: bool = typer.Option(False, "--skip-train", help="Skip training step"),
+    skip_generate: bool = typer.Option(False, "--skip-generate", help="Skip generation step"),
+    skip_evaluate: bool = typer.Option(False, "--skip-evaluate", help="Skip evaluation step"),
+    checkpoint: Optional[Path] = typer.Option(None, "--checkpoint", "-m", help="Model checkpoint (for generation)"),
 ):
-    """🔄 Run complete pipeline: preprocess → index → train → evaluate."""
+    """🔄 Run complete pipeline: preprocess → index → train → generate → evaluate."""
     init_logger()
     console.print(f"[bold magenta]Running complete RALFS pipeline on {dataset} (max {max_samples or 'all'} samples)...[/bold magenta]")
 
     try:
         cfg = load_config(config) if config else load_config()
         cfg.data.dataset = dataset
+        cfg.data.split = split
         if max_samples is not None:
             cfg.data.max_samples = max_samples
 
-        console.print("\n[bold blue]Step 1: Preprocessing...[/bold blue]")
-        run_preprocessing(cfg)
+        # Step 1: Data Preprocessing
+        console.print("\n[bold blue]Step 1: Data Preprocessing...[/bold blue]")
+        preprocessed_path = run_preprocessing(cfg)
+        console.print(f"[green]✓ Preprocessed data saved to: {preprocessed_path}[/green]")
 
-        console.print("\n[bold blue]Step 2: Building indexes...[/bold blue]")
+        # Step 2: Index Building (for Retrieval)
+        console.print("\n[bold blue]Step 2: Index Building (Retrieval)...[/bold blue]")
         builder = IndexBuilder(cfg)
-        builder.build_all_indexes()
+        indexes = builder.build_all_indexes()
+        console.print("[green]✓ Indexes built successfully[/green]")
 
-        console.print("\n[bold blue]Step 3: Training model...[/bold blue]")
-        train_model(cfg)
+        # Step 3: Training
+        if not skip_train:
+            console.print("\n[bold blue]Step 3: Training Model...[/bold blue]")
+            train_stats = train_model(cfg)
+            console.print(f"[green]✓ Training complete! Final loss: {train_stats['train_losses'][-1]:.4f}[/green]")
+            # Use the latest checkpoint for generation if not specified
+            if checkpoint is None:
+                checkpoint = Path(cfg.train.training.output_dir if hasattr(cfg.train, 'training') else "checkpoints") / "best_model"
+        else:
+            console.print("\n[yellow]⊘ Step 3: Training skipped[/yellow]")
+
+        # Step 4: Generation
+        if not skip_generate and checkpoint and checkpoint.exists():
+            console.print("\n[bold blue]Step 4: Generation...[/bold blue]")
+            # Use validation split for generation
+            cfg.data.split = "validation"
+            val_data_path = Path("data/processed") / dataset / "validation" / "chunks.jsonl"
+            
+            if val_data_path.exists():
+                retriever = create_retriever(cfg)
+                retriever.load_index()
+                generator = create_generator(cfg)
+                generator.load_checkpoint(str(checkpoint))
+                
+                val_docs = load_jsonl(val_data_path)[:min(len(val_docs), max_samples or 100)]
+                
+                predictions_path = Path("results") / "predictions.json"
+                predictions_path.parent.mkdir(parents=True, exist_ok=True)
+                
+                predictions = []
+                with Progress(SpinnerColumn(), TextColumn("[progress.description]{task.description}"), console=console) as progress:
+                    task = progress.add_task("Generating summaries...", total=len(val_docs))
+                    for doc in val_docs:
+                        query = doc.get('text', '')[:1000]
+                        retrieved = retriever.retrieve(query, k=20)
+                        passages = [{'text': r.text, 'score': r.score} for r in retrieved]
+                        result = generator.generate(query, passages)
+                        predictions.append({
+                            'id': doc.get('id', 'unknown'),
+                            'summary': result.summary,
+                            'k_used': result.k_used,
+                        })
+                        progress.update(task, advance=1)
+                
+                save_json(predictions, predictions_path)
+                console.print(f"[green]✓ Generated {len(predictions)} summaries: {predictions_path}[/green]")
+            else:
+                console.print(f"[yellow]⊘ Validation data not found at {val_data_path}, skipping generation[/yellow]")
+        elif skip_generate:
+            console.print("\n[yellow]⊘ Step 4: Generation skipped[/yellow]")
+        else:
+            console.print("\n[yellow]⊘ Step 4: Generation skipped (no checkpoint available)[/yellow]")
+
+        # Step 5: Evaluation
+        if not skip_evaluate:
+            predictions_path = Path("results") / "predictions.json"
+            references_path = Path("data/processed") / dataset / "validation" / "references.json"
+            
+            if predictions_path.exists() and references_path.exists():
+                console.print("\n[bold blue]Step 5: Evaluation...[/bold blue]")
+                eval_results = run_evaluation(
+                    predictions_path=predictions_path,
+                    references_path=references_path,
+                    output_dir=Path("results/evaluation"),
+                    metrics=["rouge", "bertscore", "egf"]
+                )
+                console.print("[green]✓ Evaluation complete! Results saved to results/evaluation[/green]")
+            else:
+                console.print("\n[yellow]⊘ Step 5: Evaluation skipped (missing predictions or references)[/yellow]")
+        else:
+            console.print("\n[yellow]⊘ Step 5: Evaluation skipped[/yellow]")
 
         console.print("\n[bold green]✅ Pipeline complete![/bold green]")
-        console.print("[yellow]Note: Full evaluation requires generated predictions.[/yellow]")
+        console.print("[cyan]Complete workflow executed: Data preprocessing → Index building → Retrieval → Generation → Evaluation[/cyan]")
     except Exception as e:
         handle_error(e, "Pipeline failed")
 

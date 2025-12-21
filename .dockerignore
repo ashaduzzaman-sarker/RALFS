@@ -1,0 +1,81 @@
+# Data directories
+data/raw/
+data/processed/
+data/index/
+results/
+outputs/
+checkpoints/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+.nox/
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+docs/
+*.md
+!README.md
+
+# CI/CD
+.github/
+
+# Cache
+.mypy_cache/
+.ruff_cache/
+.cache/
+
+# Notebooks
+notebook/
+*.ipynb
+.ipynb_checkpoints/
+
+# Temporary files
+*.log
+.DS_Store
+Thumbs.db
+
+# Environment files
+.env
+.envrc
