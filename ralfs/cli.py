@@ -14,6 +14,7 @@ from rich.progress import Progress, SpinnerColumn, TextColumn
 
 from ralfs.core.config import load_config
 from ralfs.core.logging import setup_logging, get_logger
+from ralfs.core.constants import PROCESSED_DIR, CHECKPOINTS_DIR, RESULTS_DIR
 from ralfs.data.processor import run_preprocessing
 from ralfs.data.indexer import IndexBuilder
 from ralfs.retriever import create_retriever
@@ -349,7 +350,8 @@ def pipeline(
             console.print(f"[green]✓ Training complete! Final loss: {train_stats['train_losses'][-1]:.4f}[/green]")
             # Use the latest checkpoint for generation if not specified
             if checkpoint is None:
-                checkpoint = Path(cfg.train.training.output_dir if hasattr(cfg.train, 'training') else "checkpoints") / "best_model"
+                output_dir = cfg.train.training.output_dir if hasattr(cfg.train, 'training') else str(CHECKPOINTS_DIR)
+                checkpoint = Path(output_dir) / "best_model"
         else:
             console.print("\n[yellow]⊘ Step 3: Training skipped[/yellow]")
 
@@ -358,7 +360,7 @@ def pipeline(
             console.print("\n[bold blue]Step 4: Generation...[/bold blue]")
             # Use validation split for generation
             cfg.data.split = "validation"
-            val_data_path = Path("data/processed") / dataset / "validation" / "chunks.jsonl"
+            val_data_path = PROCESSED_DIR / dataset / "validation" / "chunks.jsonl"
             
             if val_data_path.exists():
                 retriever = create_retriever(cfg)
@@ -369,7 +371,7 @@ def pipeline(
                 val_docs = load_jsonl(val_data_path)
                 val_docs = val_docs[:min(len(val_docs), max_samples or 100)]
                 
-                predictions_path = Path("results") / "predictions.json"
+                predictions_path = RESULTS_DIR / "predictions.json"
                 predictions_path.parent.mkdir(parents=True, exist_ok=True)
                 
                 predictions = []
@@ -398,15 +400,15 @@ def pipeline(
 
         # Step 5: Evaluation
         if not skip_evaluate:
-            predictions_path = Path("results") / "predictions.json"
-            references_path = Path("data/processed") / dataset / "validation" / "references.json"
+            predictions_path = RESULTS_DIR / "predictions.json"
+            references_path = PROCESSED_DIR / dataset / "validation" / "references.json"
             
             if predictions_path.exists() and references_path.exists():
                 console.print("\n[bold blue]Step 5: Evaluation...[/bold blue]")
                 eval_results = run_evaluation(
                     predictions_path=predictions_path,
                     references_path=references_path,
-                    output_dir=Path("results/evaluation"),
+                    output_dir=RESULTS_DIR / "evaluation",
                     metrics=["rouge", "bertscore", "egf"]
                 )
                 console.print("[green]✓ Evaluation complete! Results saved to results/evaluation[/green]")

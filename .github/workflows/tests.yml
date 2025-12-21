@@ -93,12 +93,17 @@ jobs:
         poetry install --with dev --no-interaction
         
     - name: Install Spacy model
+      env:
+        SPACY_MODEL_VERSION: 3.7.1
+        SPACY_MODEL_NAME: en_core_web_sm
       run: |
-        poetry run pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
+        poetry run pip install https://github.com/explosion/spacy-models/releases/download/${SPACY_MODEL_NAME}-${SPACY_MODEL_VERSION}/${SPACY_MODEL_NAME}-${SPACY_MODEL_VERSION}.tar.gz
         
     - name: Install ColBERT
+      env:
+        COLBERT_REPO_URL: git+https://github.com/stanford-futuredata/ColBERT.git
       run: |
-        poetry run pip install git+https://github.com/stanford-futuredata/ColBERT.git
+        poetry run pip install ${COLBERT_REPO_URL}
       continue-on-error: true
         
     - name: Run fast tests
@@ -150,12 +155,17 @@ jobs:
         poetry install --with dev --no-interaction
         
     - name: Install Spacy model
+      env:
+        SPACY_MODEL_VERSION: 3.7.1
+        SPACY_MODEL_NAME: en_core_web_sm
       run: |
-        poetry run pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
+        poetry run pip install https://github.com/explosion/spacy-models/releases/download/${SPACY_MODEL_NAME}-${SPACY_MODEL_VERSION}/${SPACY_MODEL_NAME}-${SPACY_MODEL_VERSION}.tar.gz
         
     - name: Install ColBERT
+      env:
+        COLBERT_REPO_URL: git+https://github.com/stanford-futuredata/ColBERT.git
       run: |
-        poetry run pip install git+https://github.com/stanford-futuredata/ColBERT.git
+        poetry run pip install ${COLBERT_REPO_URL}
       continue-on-error: true
         
     - name: Run integration tests

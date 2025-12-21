@@ -116,6 +116,14 @@ DATASET_HF_PATHS = {
 }
 
 # ============================================================================
+# External Dependencies Versions
+# ============================================================================
+SPACY_MODEL_VERSION = "3.7.1"
+SPACY_MODEL_NAME = "en_core_web_sm"
+SPACY_MODEL_URL = f"https://github.com/explosion/spacy-models/releases/download/{SPACY_MODEL_NAME}-{SPACY_MODEL_VERSION}/{SPACY_MODEL_NAME}-{SPACY_MODEL_VERSION}.tar.gz"
+COLBERT_REPO_URL = "git+https://github.com/stanford-futuredata/ColBERT.git"
+
+# ============================================================================
 # Chunking Defaults
 # ============================================================================
 DEFAULT_CHUNK_SIZE = 512  # tokens

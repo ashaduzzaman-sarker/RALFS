@@ -36,11 +36,16 @@ COPY pyproject.toml poetry.lock ./
 # Install Python dependencies
 RUN poetry install --no-root --no-interaction --no-ansi
 
+# Define versions for external dependencies (matching ralfs/core/constants.py)
+ENV SPACY_MODEL_VERSION=3.7.1 \
+    SPACY_MODEL_NAME=en_core_web_sm \
+    COLBERT_REPO_URL=git+https://github.com/stanford-futuredata/ColBERT.git
+
 # Install Spacy model
-RUN poetry run pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
+RUN poetry run pip install https://github.com/explosion/spacy-models/releases/download/${SPACY_MODEL_NAME}-${SPACY_MODEL_VERSION}/${SPACY_MODEL_NAME}-${SPACY_MODEL_VERSION}.tar.gz
 
 # Install ColBERT (optional, may be skipped if causing issues)
-RUN poetry run pip install git+https://github.com/stanford-futuredata/ColBERT.git || echo "ColBERT installation skipped"
+RUN poetry run pip install ${COLBERT_REPO_URL} || echo "ColBERT installation skipped"
 
 # Copy application code
 COPY . .
