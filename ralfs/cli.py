@@ -334,7 +334,7 @@ def pipeline(
 
         # Step 1: Data Preprocessing
         console.print("\n[bold blue]Step 1: Data Preprocessing...[/bold blue]")
-        preprocessed_path = run_preprocessing(cfg)
+        preprocessed_path = run_preprocessing(cfg, force_download=False, force_rechunk=False)
         console.print(f"[green]✓ Preprocessed data saved to: {preprocessed_path}[/green]")
 
         # Step 2: Index Building (for Retrieval)
@@ -353,7 +353,9 @@ def pipeline(
                 console.print("[yellow]⊘ Training completed but no loss statistics available[/yellow]")
             # Use the latest checkpoint for generation if not specified
             if checkpoint is None:
-                output_dir = cfg.train.training.output_dir if hasattr(cfg.train, 'training') else str(CHECKPOINTS_DIR)
+                output_dir = str(CHECKPOINTS_DIR)
+                if hasattr(cfg, 'train') and hasattr(cfg.train, 'training'):
+                    output_dir = cfg.train.training.output_dir
                 checkpoint = Path(output_dir) / "best_model"
                 if not checkpoint.exists():
                     # Try alternative checkpoint locations
