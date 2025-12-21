@@ -4,14 +4,17 @@
 """Document processing pipeline."""
 
 from __future__ import annotations
-from typing import List, Optional
+
 from pathlib import Path
+from typing import List, Optional
+
 from tqdm import tqdm
-from ralfs.core.logging import get_logger
+
 from ralfs.core.constants import PROCESSED_DIR, RAW_DIR
+from ralfs.core.logging import get_logger
+from ralfs.data.chunker import Chunk, create_chunker
 from ralfs.data.downloader import DatasetDownloader, Document
-from ralfs.data.chunker import create_chunker, Chunk
-from ralfs.utils.io import save_jsonl, load_jsonl
+from ralfs.utils.io import load_jsonl, save_jsonl
 
 logger = get_logger(__name__)
 

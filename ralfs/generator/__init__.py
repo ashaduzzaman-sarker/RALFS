@@ -3,10 +3,10 @@
 # ============================================================================
 """Generation module with Fusion-in-Decoder and adaptive k selection."""
 
-from .base import BaseGenerator, GenerationResult
-from .fid import FiDGenerator
 from .adaptive_k import AdaptiveKSelector
+from .base import BaseGenerator, GenerationResult
 from .factory import create_generator
+from .fid import FiDGenerator
 
 __all__ = [
     "BaseGenerator",

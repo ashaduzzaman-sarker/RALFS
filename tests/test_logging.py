@@ -1,14 +1,14 @@
 import logging
-from pathlib import Path
-import pytest
-from unittest.mock import patch, MagicMock
 
-from ralfs.core.logging import get_logger, setup_logging, RALFS_FORMATTER
+import pytest
+
+from ralfs.core.logging import get_logger, setup_logging
+
 
 class TestGetLogger:
     def test_get_logger_default(self):
         """Test getting default logger with a name."""
-        logger = get_logger("default_test_logger") # Added required 'name' argument
+        logger = get_logger("default_test_logger")  # Added required 'name' argument
         assert logger.name == "default_test_logger"
         assert logger.level == logging.INFO
         assert logger.propagate is True
@@ -52,50 +52,53 @@ class TestSetupLogging:
         root_logger = logging.getLogger()
         original_handlers = root_logger.handlers[:]
         original_level = root_logger.level
-        
+
         # Clear handlers from root and all specific loggers
         for handler in root_logger.handlers[:]:
             root_logger.removeHandler(handler)
-        for name, logger_obj in logging.root.manager.loggerDict.items():
+        for _name, logger_obj in logging.root.manager.loggerDict.items():
             if isinstance(logger_obj, logging.Logger):
                 for handler in logger_obj.handlers[:]:
                     logger_obj.removeHandler(handler)
 
         yield
-        
+
         # Restore original handlers and level
         for handler in root_logger.handlers[:]:
             root_logger.removeHandler(handler)
         for handler in original_handlers:
             root_logger.addHandler(handler)
         root_logger.level = original_level
-        
+
         # Clear handlers from specific loggers again if they were added during tests
-        for name, logger_obj in logging.root.manager.loggerDict.items():
+        for _name, logger_obj in logging.root.manager.loggerDict.items():
             if isinstance(logger_obj, logging.Logger):
                 for handler in logger_obj.handlers[:]:
                     logger_obj.removeHandler(handler)
 
-
     def test_setup_logging_console_only(self):
         """Test setup with console output only."""
-        setup_logging(log_level="INFO") # Changed 'level' to 'log_level', removed console_output=True
+        setup_logging(
+            log_level="INFO"
+        )  # Changed 'level' to 'log_level', removed console_output=True
         root_logger = logging.getLogger()
         assert root_logger.level == logging.INFO
         assert any(isinstance(h, logging.StreamHandler) for h in root_logger.handlers)
-        assert not any(isinstance(h, logging.FileHandler) for h in root_logger.handlers) # No file handler
+        assert not any(
+            isinstance(h, logging.FileHandler) for h in root_logger.handlers
+        )  # No file handler
 
     def test_setup_logging_with_file(self, tmp_path):
         """Test setup with file output."""
         log_file = tmp_path / "test.log"
-        setup_logging(log_level="DEBUG", log_file=log_file) # Changed 'level' to 'log_level'
+        setup_logging(log_level="DEBUG", log_file=log_file)  # Changed 'level' to 'log_level'
         root_logger = logging.getLogger()
         assert root_logger.level == logging.DEBUG
         assert any(isinstance(h, logging.FileHandler) for h in root_logger.handlers)
         assert log_file.exists()
         # Verify file content
         root_logger.info("File log test message")
-        with open(log_file, 'r') as f:
+        with open(log_file) as f:
             content = f.read()
             assert "File log test message" in content
 
@@ -109,7 +112,7 @@ class TestSetupLogging:
 
     def test_setup_logging_suppresses_verbose_libraries(self):
         """Test that verbose libraries are suppressed."""
-        setup_logging(log_level="INFO") # Changed 'level' to 'log_level'
+        setup_logging(log_level="INFO")  # Changed 'level' to 'log_level'
         assert logging.getLogger("transformers").level == logging.WARNING
         assert logging.getLogger("huggingface_hub").level == logging.WARNING
         assert logging.getLogger("datasets").level == logging.WARNING

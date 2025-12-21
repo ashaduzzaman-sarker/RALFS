@@ -4,7 +4,7 @@
 """Training module with LoRA fine-tuning."""
 
 from .dataset import FiDDataset, create_dataloader
-from .trainer import train_model, RALFSTrainer
+from .trainer import RALFSTrainer, train_model
 
 __all__ = [
     "FiDDataset",
@@ -12,5 +12,3 @@ __all__ = [
     "train_model",
     "RALFSTrainer",
 ]
-
-

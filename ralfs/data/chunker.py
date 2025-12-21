@@ -4,11 +4,14 @@
 """Text chunking strategies for long documents."""
 
 from __future__ import annotations
-from dataclasses import dataclass, asdict
-from typing import List, Dict, Any, Protocol
-from abc import ABC, abstractmethod
-import nltk
+
 import re
+from abc import ABC, abstractmethod
+from dataclasses import asdict, dataclass
+from typing import Any, Dict, List, Protocol
+
+import nltk
+
 from ralfs.core.logging import get_logger
 
 logger = get_logger(__name__)

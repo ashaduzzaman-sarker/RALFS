@@ -1,9 +1,11 @@
 """
 Basic setup tests to ensure package is installed correctly.
 """
-import pytest
+
 import sys
 from pathlib import Path
+
+import pytest
 
 
 def test_python_version():
@@ -14,12 +16,14 @@ def test_python_version():
 def test_package_importable():
     """Test RALFS package can be imported"""
     import ralfs
+
     assert ralfs.__name__ == "ralfs"
 
 
 def test_cli_importable():
     """Test CLI module is importable"""
     from ralfs import cli
+
     assert hasattr(cli, "app")
 
 
@@ -44,10 +48,6 @@ def test_dependencies_installed():
     """Test critical dependencies are installed"""
     import torch
     import transformers
-    import sentence_transformers
-    import datasets
-    import hydra
-    import typer
-    
+
     assert torch.__version__ >= "2.4.0"
     assert transformers.__version__ >= "4.44.0"

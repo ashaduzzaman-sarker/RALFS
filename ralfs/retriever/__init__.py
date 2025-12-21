@@ -4,13 +4,13 @@
 """Retrieval module for RALFS: Dense, Sparse, ColBERT, Hybrid, and Reranking."""
 
 from .base import BaseRetriever, RetrievalResult
-from .dense import DenseRetriever
-from .sparse import SparseRetriever
 from .colbert import ColBERTRetriever
+from .dense import DenseRetriever
+from .factory import create_retriever
 from .hybrid import HybridRetriever
 from .reranker import CrossEncoderReranker
-from .factory import create_retriever
-from .utils import reciprocal_rank_fusion, normalize_scores
+from .sparse import SparseRetriever
+from .utils import normalize_scores, reciprocal_rank_fusion
 
 __all__ = [
     # Base classes

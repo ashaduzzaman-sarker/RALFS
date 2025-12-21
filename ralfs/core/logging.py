@@ -6,12 +6,12 @@
 import logging
 import sys
 from pathlib import Path
-from typing import Optional
 
 # Define a consistent formatter for all loggers
 RALFS_FORMATTER = logging.Formatter(
     "[%(asctime)s] %(levelname)s %(name)s %(message)s", datefmt="%m/%d/%y %H:%M:%S"
 )
+
 
 def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:
     """
@@ -20,7 +20,7 @@ def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:
     """
     logger = logging.getLogger(name)
     logger.setLevel(level)
-    
+
     # Ensure propagation is True so messages reach the root logger (critical for pytest-caplog)
     logger.propagate = True
 
@@ -32,10 +32,11 @@ def get_logger(name: str, level: int = logging.INFO) -> logging.Logger:
         handler = logging.StreamHandler(sys.stderr)
         handler.setFormatter(RALFS_FORMATTER)
         logger.addHandler(handler)
-        
+
     return logger
 
-def setup_logging(log_level: str = "INFO", log_file: Optional[Path | str] = None) -> None:
+
+def setup_logging(log_level: str = "INFO", log_file: Path | str | None = None) -> None:
     """
     Set up global logging configuration.
     Configures handlers for the root logger and suppresses verbose external libraries.
@@ -48,7 +49,9 @@ def setup_logging(log_level: str = "INFO", log_file: Optional[Path | str] = None
         root_logger.removeHandler(handler)
 
     # Add a console handler to the root logger
-    console_handler = logging.StreamHandler(sys.stdout)  # Direct to stdout for general console output
+    console_handler = logging.StreamHandler(
+        sys.stdout
+    )  # Direct to stdout for general console output
     console_handler.setFormatter(RALFS_FORMATTER)
     root_logger.addHandler(console_handler)
 
@@ -64,4 +67,3 @@ def setup_logging(log_level: str = "INFO", log_file: Optional[Path | str] = None
     logging.getLogger("huggingface_hub").setLevel(logging.WARNING)
     logging.getLogger("datasets").setLevel(logging.WARNING)
     logging.getLogger("sentence_transformers").setLevel(logging.WARNING)
-

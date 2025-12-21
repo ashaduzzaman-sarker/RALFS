@@ -3,16 +3,16 @@
 # ============================================================================
 """Evaluation module with ROUGE, BERTScore, and EGF."""
 
-from .metrics import evaluate_predictions, evaluate_rouge, evaluate_bertscore
-from .faithfulness import compute_egf, EntityGridFaithfulness, EntityGrid
-from .main import (
-    run_evaluation,
-    RALFSEvaluator,
-    EvaluationResult,
-    AggregatedResults,
-    compare_systems,
-)
+from .faithfulness import EntityGrid, EntityGridFaithfulness, compute_egf
 from .human import create_human_eval_template
+from .main import (
+    AggregatedResults,
+    EvaluationResult,
+    RALFSEvaluator,
+    compare_systems,
+    run_evaluation,
+)
+from .metrics import evaluate_bertscore, evaluate_predictions, evaluate_rouge
 
 __all__ = [
     "evaluate_predictions",

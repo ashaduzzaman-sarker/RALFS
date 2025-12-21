@@ -4,20 +4,21 @@
 """Build retrieval indexes (FAISS, BM25, ColBERT)."""
 
 from __future__ import annotations
-from pathlib import Path
-from typing import List, Dict, Any, Optional
-import numpy as np
+
 import pickle
-from tqdm import tqdm
+from pathlib import Path
+from typing import Any, Dict, List, Optional
 
 # Retrieval libraries
 import faiss
-from sentence_transformers import SentenceTransformer
+import numpy as np
 from rank_bm25 import BM25Okapi
+from sentence_transformers import SentenceTransformer
+from tqdm import tqdm
 
-from ralfs.core.logging import get_logger
-from ralfs.utils.io import save_json, load_jsonl
 from ralfs.core.constants import INDEX_DIR, PROCESSED_DIR
+from ralfs.core.logging import get_logger
+from ralfs.utils.io import load_jsonl, save_json
 
 logger = get_logger(__name__)
 

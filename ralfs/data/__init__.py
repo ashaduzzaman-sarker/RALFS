@@ -3,10 +3,10 @@
 # ============================================================================
 """Data processing pipeline for RALFS."""
 
+from .chunker import Chunk, FixedChunker, SemanticChunker, SentenceChunker
 from .downloader import DatasetDownloader, Document
-from .chunker import SemanticChunker, FixedChunker, SentenceChunker, Chunk
+from .indexer import IndexBuilder, build_index, build_sparse_index
 from .processor import run_preprocessing
-from .indexer import build_index, build_sparse_index, IndexBuilder
 
 __all__ = [
     # Downloader
