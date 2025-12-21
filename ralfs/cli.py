@@ -159,7 +159,7 @@ def train(
             cfg.train.wandb.enabled = True
             cfg.train.wandb.project = wandb_project
 
-        stats = train_model(cfg, resume_from=resume)
+        stats = train_model(cfg)
 
         console.print("[bold green]✅ Training complete![/bold green]")
         console.print(f"Final train loss: {stats['train_losses'][-1]:.4f}")
@@ -312,7 +312,7 @@ def info(
 @app.command()
 def pipeline(
     dataset: str = typer.Option("arxiv", "--dataset", "-d", help="Dataset name"),
-    max_samples: Optional[int] = typer.Option(10, "--max-samples", "-n", help="Max samples (for testing)"),
+    max_samples: Optional[int] = typer.Option(None, "--max-samples", "-n", help="Max samples (for testing)"),
     config: Optional[Path] = typer.Option(None, "--config", "-c", help="Config file"),
 ):
     """🔄 Run complete pipeline: preprocess → index → train → evaluate."""
