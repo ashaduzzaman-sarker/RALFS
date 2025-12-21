@@ -1,0 +1,197 @@
+name: Tests
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+  workflow_dispatch:
+
+jobs:
+  lint:
+    name: Lint & Format Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+        
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+    - name: Configure Poetry
+      run: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+        
+    - name: Cache Poetry dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        
+    - name: Install dependencies
+      run: |
+        poetry install --with dev --no-interaction
+        
+    - name: Run Ruff linter
+      run: poetry run ruff check ralfs/ tests/
+      
+    - name: Check code formatting with Black
+      run: poetry run black --check ralfs/ tests/
+      
+    - name: Check import sorting with isort
+      run: poetry run isort --check-only ralfs/ tests/
+      
+    - name: Run MyPy type checker
+      run: poetry run mypy ralfs/
+      continue-on-error: true
+
+  test:
+    name: Test Suite
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+        cache: 'pip'
+        
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+    - name: Configure Poetry
+      run: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+        
+    - name: Cache Poetry dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-py${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+        
+    - name: Install dependencies
+      run: |
+        poetry install --with dev --no-interaction
+        
+    - name: Install Spacy model
+      env:
+        SPACY_MODEL_VERSION: 3.7.1
+        SPACY_MODEL_NAME: en_core_web_sm
+      run: |
+        poetry run pip install https://github.com/explosion/spacy-models/releases/download/${SPACY_MODEL_NAME}-${SPACY_MODEL_VERSION}/${SPACY_MODEL_NAME}-${SPACY_MODEL_VERSION}.tar.gz
+        
+    - name: Install ColBERT
+      env:
+        COLBERT_REPO_URL: git+https://github.com/stanford-futuredata/ColBERT.git
+      run: |
+        poetry run pip install ${COLBERT_REPO_URL}
+      continue-on-error: true
+        
+    - name: Run fast tests
+      run: poetry run pytest tests/ -v -m "not slow and not integration"
+      
+    - name: Run unit tests with coverage
+      run: poetry run pytest tests/ -v -m "not slow" --cov=ralfs --cov-report=xml --cov-report=term-missing
+      
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v4
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+      continue-on-error: true
+
+  integration-test:
+    name: Integration Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        cache: 'pip'
+        
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+    - name: Configure Poetry
+      run: |
+        poetry config virtualenvs.create true
+        poetry config virtualenvs.in-project true
+        
+    - name: Cache Poetry dependencies
+      uses: actions/cache@v4
+      with:
+        path: .venv
+        key: venv-${{ runner.os }}-${{ hashFiles('**/poetry.lock') }}
+        
+    - name: Install dependencies
+      run: |
+        poetry install --with dev --no-interaction
+        
+    - name: Install Spacy model
+      env:
+        SPACY_MODEL_VERSION: 3.7.1
+        SPACY_MODEL_NAME: en_core_web_sm
+      run: |
+        poetry run pip install https://github.com/explosion/spacy-models/releases/download/${SPACY_MODEL_NAME}-${SPACY_MODEL_VERSION}/${SPACY_MODEL_NAME}-${SPACY_MODEL_VERSION}.tar.gz
+        
+    - name: Install ColBERT
+      env:
+        COLBERT_REPO_URL: git+https://github.com/stanford-futuredata/ColBERT.git
+      run: |
+        poetry run pip install ${COLBERT_REPO_URL}
+      continue-on-error: true
+        
+    - name: Run integration tests
+      run: poetry run pytest tests/ -v -m "integration and not slow"
+      continue-on-error: true
+
+  build-check:
+    name: Build Check
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: '3.10'
+        
+    - name: Install Poetry
+      run: |
+        curl -sSL https://install.python-poetry.org | python3 -
+        echo "$HOME/.local/bin" >> $GITHUB_PATH
+        
+    - name: Build package
+      run: poetry build
+      
+    - name: Check package contents
+      run: tar -tzf dist/*.tar.gz | head -20
