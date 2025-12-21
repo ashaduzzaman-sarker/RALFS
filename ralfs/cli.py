@@ -347,11 +347,20 @@ def pipeline(
         if not skip_train:
             console.print("\n[bold blue]Step 3: Training Model...[/bold blue]")
             train_stats = train_model(cfg)
-            console.print(f"[green]✓ Training complete! Final loss: {train_stats['train_losses'][-1]:.4f}[/green]")
+            if train_stats and train_stats.get('train_losses') and len(train_stats['train_losses']) > 0:
+                console.print(f"[green]✓ Training complete! Final loss: {train_stats['train_losses'][-1]:.4f}[/green]")
+            else:
+                console.print("[yellow]⊘ Training completed but no loss statistics available[/yellow]")
             # Use the latest checkpoint for generation if not specified
             if checkpoint is None:
                 output_dir = cfg.train.training.output_dir if hasattr(cfg.train, 'training') else str(CHECKPOINTS_DIR)
                 checkpoint = Path(output_dir) / "best_model"
+                if not checkpoint.exists():
+                    # Try alternative checkpoint locations
+                    checkpoint = Path(output_dir) / "checkpoint-final"
+                    if not checkpoint.exists():
+                        console.print(f"[yellow]Warning: No checkpoint found at {checkpoint}[/yellow]")
+                        checkpoint = None
         else:
             console.print("\n[yellow]⊘ Step 3: Training skipped[/yellow]")
 
@@ -359,8 +368,8 @@ def pipeline(
         if not skip_generate and checkpoint and checkpoint.exists():
             console.print("\n[bold blue]Step 4: Generation...[/bold blue]")
             # Use validation split for generation
-            cfg.data.split = "validation"
-            val_data_path = PROCESSED_DIR / dataset / "validation" / "chunks.jsonl"
+            val_split = "validation"
+            val_data_path = PROCESSED_DIR / f"{dataset}_{val_split}_chunks.jsonl"
             
             if val_data_path.exists():
                 retriever = create_retriever(cfg)
@@ -401,7 +410,13 @@ def pipeline(
         # Step 5: Evaluation
         if not skip_evaluate:
             predictions_path = RESULTS_DIR / "predictions.json"
-            references_path = PROCESSED_DIR / dataset / "validation" / "references.json"
+            # References path should match the preprocessed data structure
+            val_split = "validation"
+            references_path = PROCESSED_DIR / f"{dataset}_{val_split}_references.json"
+            
+            # If references don't exist in that format, try the chunks file
+            if not references_path.exists():
+                references_path = PROCESSED_DIR / f"{dataset}_{val_split}_chunks.jsonl"
             
             if predictions_path.exists() and references_path.exists():
                 console.print("\n[bold blue]Step 5: Evaluation...[/bold blue]")

@@ -5,6 +5,8 @@
 # GitHub Actions, Dockerfile, and other installation scripts.
 # ============================================================================
 
+set -euo pipefail  # Exit on error, undefined variables, and pipe failures
+
 # Spacy model configuration
 export SPACY_MODEL_VERSION="3.7.1"
 export SPACY_MODEL_NAME="en_core_web_sm"
