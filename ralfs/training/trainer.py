@@ -43,6 +43,8 @@ class RALFSTrainer:
         # Get mixed precision setting
         training_cfg = getattr(self.train_config, 'training', self.train_config)
         mixed_precision = getattr(training_cfg, 'mixed_precision', 'fp16')
+        self.gradient_checkpointing = getattr(training_cfg, 'gradient_checkpointing', False)
+        self.memory_efficient = getattr(training_cfg, 'memory_efficient', False)
         
         # Setup accelerator
         self.accelerator = Accelerator(
@@ -97,6 +99,11 @@ class RALFSTrainer:
         self.global_step = 0
         self.best_metric = float('-inf')
         self.patience_counter = 0
+
+    def _maybe_empty_cache(self):
+        """Release GPU cache to reduce fragmentation."""
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
     
     def setup_model(self):
         """Load model and apply LoRA."""
@@ -108,7 +115,21 @@ class RALFSTrainer:
         self.tokenizer = AutoTokenizer.from_pretrained(model_name)
         
         # Load model
-        self.model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+        if self.accelerator.device.type == "cuda":
+            torch_dtype = torch.bfloat16 if self.accelerator.mixed_precision == "bf16" else torch.float16
+        else:
+            torch_dtype = torch.float32
+        self.model = AutoModelForSeq2SeqLM.from_pretrained(
+            model_name,
+            torch_dtype=torch_dtype,
+        )
+
+        # Enable gradient checkpointing for memory savings
+        if self.gradient_checkpointing and hasattr(self.model, "gradient_checkpointing_enable"):
+            logger.info("Enabling gradient checkpointing for memory efficiency")
+            self.model.gradient_checkpointing_enable()
+            if hasattr(self.model, "config"):
+                self.model.config.use_cache = False
         
         # Apply LoRA
         if self.lora_config and getattr(self.lora_config, 'enabled', True):
@@ -198,6 +219,18 @@ class RALFSTrainer:
         save_steps = getattr(training_cfg, 'save_steps', 1000)
         eval_steps = getattr(training_cfg, 'eval_steps', 500)
         gradient_accumulation_steps = getattr(training_cfg, 'gradient_accumulation_steps', 16)
+
+        # Memory-efficient overrides for small GPUs
+        if self.memory_efficient:
+            batch_size = min(batch_size, 1)
+            gradient_accumulation_steps = max(gradient_accumulation_steps, 8)
+            logger.info(
+                f"Memory-efficient mode enabled: batch_size={batch_size}, "
+                f"grad_accum_steps={gradient_accumulation_steps}"
+            )
+
+        # Keep accelerator in sync with potentially updated accumulation steps
+        self.accelerator.gradient_accumulation_steps = gradient_accumulation_steps
         
         # Create dataloaders
         dataloader_cfg = getattr(self.train_config, 'dataloader', None)
@@ -281,9 +314,10 @@ class RALFSTrainer:
                     
                     self.optimizer.step()
                     self.scheduler.step()
-                    self.optimizer.zero_grad()
+                    self.optimizer.zero_grad(set_to_none=True)
                     
                     self.global_step += 1
+                    self._maybe_empty_cache()
                 
                 # Track
                 epoch_loss += loss.item() * gradient_accumulation_steps
@@ -358,6 +392,9 @@ class RALFSTrainer:
             
             # Save epoch checkpoint
             self.save_checkpoint(f"epoch_{epoch+1}")
+
+            # Reduce fragmentation between epochs
+            self._maybe_empty_cache()
             
             # Check early stopping at epoch level
             if hasattr(self, 'patience_counter') and self.patience_counter >= getattr(training_cfg, 'early_stopping_patience', float('inf')):
@@ -376,6 +413,8 @@ class RALFSTrainer:
         
         if self.use_wandb:
             self.wandb.finish()
+
+        self._maybe_empty_cache()
         
         return training_stats
     
@@ -442,6 +481,7 @@ class RALFSTrainer:
             self.wandb.log(log_dict)
         
         self.model.train()
+        self._maybe_empty_cache()
         
         return {
             'loss': avg_loss,
