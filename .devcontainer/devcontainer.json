@@ -1,0 +1,16 @@
+{
+  "name": "RALFS Dev Container",
+  "build": {
+    "dockerfile": "../Dockerfile",
+    "context": ".."
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "GitHub.copilot"
+      ]
+    }
+  },
+  "postCreateCommand": "apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y texlive-full && apt-get clean && rm -rf /var/lib/apt/lists/*",
+  "remoteUser": "root"
+}
