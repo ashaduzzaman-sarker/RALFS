@@ -92,9 +92,13 @@ class TrainConfig:
     save_steps: int = 500
     save_total_limit: int = 3
     fp16: bool = True
+    mixed_precision: str = "fp16"
     use_wandb: bool = False
     wandb_project: Optional[str] = None
     seed: int = 42
+    # Memory optimizations
+    gradient_checkpointing: bool = False
+    memory_efficient: bool = False
 
 
 def _to_dict_safe(cfg: Any) -> Dict[str, Any]:
