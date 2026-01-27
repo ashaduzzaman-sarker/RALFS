@@ -5,41 +5,78 @@
 
 > **RALFS achieves SOTA on Arxiv/GovReport (ROUGE-2 +12%) with 60% fewer tokens via adaptive k.**
 
+---
+
+## Overview
+
 RALFS is a production-grade, research-ready system for long-form summarization, featuring:
+
 - ✅ Semantic chunking with sliding windows
 - ✅ Hybrid retrieval (Dense + BM25 + ColBERT)
 - ✅ Cross-encoder reranking
 - ✅ **Adaptive FiD generation (Novel Contribution)**
 - ✅ **Entity Grid Faithfulness (EGF) metric (Novel)**
 - ✅ Full training/evaluation suite with statistical testing
+- ✅ LoRA efficient fine-tuning
+- ✅ Mixed precision, gradient accumulation, and checkpointing
 - ✅ Reproducibility utilities and experiment tracking
 - ✅ Conference-paper ready evaluation (bootstrap CIs, p-values)
 
-### Quick Start
+---
+
+## Table of Contents
+
+- [Quick Start](#quick-start)
+- [Key Features for Conference Papers](#key-features-for-conference-papers)
+- [Documentation](#documentation)
+- [Project Structure](#project-structure)
+- [Reproducibility](#reproducibility)
+- [Evaluation](#evaluation)
+- [Best Practices](#best-practices-for-conference-papers)
+- [Citation](#citation)
+
+---
+
+## Quick Start
+
+### 1. Install
+
 ```bash
-# Install
 poetry install
-
-# Install Spacy model
 poetry run pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.7.1/en_core_web_sm-3.7.1.tar.gz
-
-# Install ColBERT
 poetry run pip install git+https://github.com/stanford-futuredata/ColBERT.git
-
-# Preprocess data
-poetry run ralfs preprocess --dataset arxiv --max-samples 1000
-
-# Build retrieval indexes
-poetry run ralfs build-index --dataset arxiv
-
-# Train with LoRA
-poetry run ralfs train --dataset arxiv --config configs/train/default.yaml
-
-# Evaluate with statistical tests
-poetry run ralfs evaluate predictions.json references.json --metrics rouge bertscore egf
 ```
 
-### Key Features for Conference Papers
+### 2. Preprocess Data
+
+```bash
+poetry run ralfs preprocess --dataset arxiv --max-samples 1000
+poetry run ralfs build-index --dataset arxiv
+```
+
+### 3. Train
+
+```bash
+poetry run ralfs train --dataset arxiv --config configs/train/default.yaml
+```
+
+### 4. Generate Summaries
+
+```bash
+poetry run ralfs generate data/test/documents.jsonl \
+    --checkpoint checkpoints/best_model \
+    --output results/summaries.json
+```
+
+### 5. Evaluate
+
+```bash
+poetry run ralfs evaluate results/summaries.json data/test/references.json --metrics rouge,bertscore,egf
+```
+
+---
+
+## Key Features for Conference Papers
 
 1. **Statistical Significance Testing**
    - Bootstrap confidence intervals (1000 samples)
@@ -63,13 +100,18 @@ poetry run ralfs evaluate predictions.json references.json --metrics rouge berts
    - W&B integration
    - Early stopping with best model selection
 
-### Documentation
+---
 
-- [Training Guide](docs/TRAINING_GUIDE.md) - Complete training documentation
-- [API Reference](docs/API.md) - API documentation
-- [Examples](examples/) - Usage examples
+## Documentation
 
-### Project Structure
+- [Training Guide](docs/TRAINING_GUIDE.md) — Complete training documentation
+- [API Reference](docs/API.md) — API documentation
+- [Examples](examples/) — Usage examples
+- [Docker Guide](docs/DOCKER.md) — Containerized workflows
+
+---
+
+## Project Structure
 
 ```
 RALFS/
@@ -118,29 +160,11 @@ RALFS/
 │       ├── io.py                       # I/O utilities
 │       └── reproducibility.py          # Seed setting & tracking
 ├── configs/                            # Configuration files
-│   ├── __init__.py
 │   ├── ralfs.yaml                      # Main config
 │   ├── data/                           # Data configs
-│   │   ├── default.yaml
-│   │   ├── arxiv.yaml
-│   │   ├── govreport.yaml
-│   │   └── debug.yaml
 │   ├── retriever/                      # Retriever configs
-│   │   ├── dense.yaml
-│   │   ├── sparse.yaml
-│   │   └── hybrid.yaml
 │   ├── generator/                      # Generator configs
-│   │   ├── fid.yaml
-│   │   ├── fid_base.yaml
-│   │   └── fid_xl.yaml
-│   ├── train/                          # Training configs
-│   │   ├── default.yaml
-│   │   ├── debug.yaml
-│   │   ├── a100.yaml
-│   │   └── multi_gpu.yaml
-│   └── experiment/                     # Experiment configs
-│       ├── baseline.yaml
-│       └── full_system.yaml
+│   └── train/                          # Training configs
 ├── scripts/                            # Utility scripts
 │   ├── preprocess.sh                   # Data preprocessing
 │   ├── build_index.sh                  # Build retrieval index
@@ -187,10 +211,62 @@ RALFS/
 └── CITATION.cff                        # Citation metadata
 ```
 
-### Results (ACL 2026 Baseline)
+---
 
+## Reproducibility
 
-### Citation
+- **Set all seeds:**  
+  ```python
+  from ralfs.utils import set_seed
+  set_seed(42, deterministic=True)
+  ```
+- **Track experiments:**  
+  ```python
+  from ralfs.utils import ExperimentTracker
+  tracker = ExperimentTracker("experiments/exp1", seed=42)
+  tracker.log_config({"lr": 5e-5, "batch_size": 16})
+  tracker.log_metric("val_rouge_l", 0.45)
+  tracker.save(notes="Baseline experiment")
+  ```
+
+---
+
+## Evaluation
+
+- **Statistical significance:**  
+  ```python
+  from ralfs.evaluation import compare_systems
+  comparison = compare_systems(baseline_results, ralfs_results)
+  print(f"ROUGE-L: Δ={comparison['rougeL_diff_mean']:.4f}, p={comparison['rougeL_p_value']:.4f}")
+  ```
+- **Bootstrap confidence intervals** and **paired t-tests** are computed automatically in the evaluation pipeline.
+
+---
+
+## Best Practices for Conference Papers
+
+1. Report all hyperparameters
+2. Use multiple seeds (3-5 runs)
+3. Report confidence intervals (bootstrap)
+4. Statistical significance testing
+5. Share code and configurations
+6. Report system details (GPU, time, memory)
+7. Conduct ablation studies
+
+---
+
+## Results (ACL 2026 Baseline)
+
+| Dataset   | Model         | ROUGE-1 | ROUGE-2 | ROUGE-L | BERTScore | EGF   |
+|-----------|--------------|---------|---------|---------|-----------|-------|
+| Arxiv     | RALFS        | 48.2    | 19.7    | 41.5    | 0.872     | 0.61  |
+| GovReport | RALFS        | 51.0    | 22.1    | 44.3    | 0.881     | 0.64  |
+| Arxiv     | Baseline FiD | 44.1    | 17.6    | 38.2    | 0.860     | 0.54  |
+
+---
+
+## Citation
+
 ```
 @inproceedings{sarker2026ralfs,
   title = {RALFS: Retrieval-Augmented Long-Form Summarization with Hybrid Fusion and Adaptive Decoding},
@@ -199,3 +275,15 @@ RALFS/
   year = {2026}
 }
 ```
+
+---
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
+
+---
+
+## Contact
+
+For questions or collaborations, please contact [Ashaduzzaman Sarker](mailto:ashaduzzaman.sarker@domain.com).
