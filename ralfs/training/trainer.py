@@ -269,6 +269,9 @@ class RALFSTrainer:
             'train_losses': [],
             'eval_losses': [],
             'eval_rouge': [],
+            'eval_bertscore': [],
+            'eval_egf': [],
+            'eval_token_counts': [],
             'learning_rates': [],
             'global_steps': [],
             'epochs': [],
@@ -356,6 +359,9 @@ class RALFSTrainer:
                     eval_metrics = self.evaluate(eval_dataloader)
                     training_stats['eval_losses'].append(eval_metrics['loss'])
                     training_stats['eval_rouge'].append(eval_metrics.get('rouge', {}))
+                    training_stats['eval_bertscore'].append(eval_metrics.get('bertscore', {}))
+                    training_stats['eval_egf'].append(eval_metrics.get('egf_metric', {}))
+                    training_stats['eval_token_counts'].append(eval_metrics.get('token_count', {}))
                     
                     # Check if best model
                     metric_for_best = getattr(training_cfg, 'metric_for_best_model', 'rougeL')
@@ -423,12 +429,13 @@ class RALFSTrainer:
         Evaluate model on validation set with multiple metrics.
         
         Returns:
-            Dict with loss, ROUGE, and other metrics
+            Dict with loss, ROUGE, BERTScore, EGF, and token count metrics
         """
         self.model.eval()
         total_loss = 0
         all_predictions = []
         all_references = []
+        token_counts = []
         
         logger.info("Running evaluation...")
         
@@ -451,6 +458,10 @@ class RALFSTrainer:
                         num_beams=2,  # Faster beam search
                     )
                     
+                    # Track token counts
+                    for seq in generated:
+                        token_counts.append(seq.numel())
+                    
                     # Decode
                     pred_texts = self.tokenizer.batch_decode(generated, skip_special_tokens=True)
                     ref_texts = self.tokenizer.batch_decode(batch['labels'], skip_special_tokens=True)
@@ -465,6 +476,37 @@ class RALFSTrainer:
         if all_predictions:
             rouge_scores = evaluate_rouge(all_predictions, all_references)
         
+        # Compute BERTScore
+        bertscore = {}
+        if all_predictions:
+            try:
+                bertscore = evaluate_bertscore(all_predictions, all_references)
+                logger.info(f"BERTScore F1: {bertscore.get('bertscore_f1', 0):.4f}")
+            except Exception as e:
+                logger.warning(f"Could not compute BERTScore: {e}")
+        
+        # Compute EGF (Entity Grid Faithfulness)
+        egf_score = {}
+        if all_predictions:
+            try:
+                egf_values = []
+                for pred, ref in zip(all_predictions, all_references):
+                    egf = compute_egf(pred, ref)
+                    if egf is not None:
+                        egf_values.append(egf)
+                if egf_values:
+                    avg_egf = np.mean(egf_values)
+                    egf_score['egf_metric'] = avg_egf
+                    logger.info(f"EGF Metric: {avg_egf:.4f}")
+            except Exception as e:
+                logger.warning(f"Could not compute EGF: {e}")
+        
+        # Compute average token count
+        avg_token_count = {}
+        if token_counts:
+            avg_token_count['token_count'] = int(np.mean(token_counts))
+            logger.info(f"Avg Token Count: {avg_token_count['token_count']}")
+        
         logger.info(f"Validation Loss: {avg_loss:.4f}")
         if rouge_scores:
             logger.info(f"Validation ROUGE-L: {rouge_scores.get('rougeL', 0):.4f}")
@@ -478,6 +520,15 @@ class RALFSTrainer:
             if rouge_scores:
                 for key, val in rouge_scores.items():
                     log_dict[f'eval/{key}'] = val
+            if bertscore:
+                for key, val in bertscore.items():
+                    log_dict[f'eval/{key}'] = val
+            if egf_score:
+                for key, val in egf_score.items():
+                    log_dict[f'eval/{key}'] = val
+            if avg_token_count:
+                for key, val in avg_token_count.items():
+                    log_dict[f'eval/{key}'] = val
             self.wandb.log(log_dict)
         
         self.model.train()
@@ -486,6 +537,9 @@ class RALFSTrainer:
         return {
             'loss': avg_loss,
             'rouge': rouge_scores,
+            'bertscore': bertscore,
+            'egf_metric': egf_score,
+            'token_count': avg_token_count,
         }
     
     def save_checkpoint(self, name: str):
