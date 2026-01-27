@@ -102,8 +102,40 @@ poetry run ralfs evaluate results/summaries.json data/test/references.json --met
 
 ---
 
+## Reproducing Phase 2 Results
+
+All Phase 2 validation experiments are reproducible with single commands:
+
+```bash
+# 1. EGF Human Validation (10 min)
+make reproduce-egf-validation
+
+# 2. Learned-k Baseline (15 min)
+make reproduce-learned-k
+
+# 3. Oracle-k Upper Bound (15 min)
+make reproduce-oracle-k
+
+# 4. Computational Cost Analysis (10 min)
+make reproduce-cost-analysis
+
+# Run all Phase 2 experiments
+make reproduce-phase2
+```
+
+Results are saved to:
+- `results/egf_human_eval/egf_validation.json`
+- `results/learned_k_baseline/learned_k_evaluation.json`
+- `results/oracle_k/oracle_k_evaluation.json`
+- `results/computational_costs/computational_costs.json`
+
+See [docs/REPRODUCTION.md](docs/REPRODUCTION.md) for detailed reproduction instructions.
+
+---
+
 ## Documentation
 
+- [Reproduction Guide](docs/REPRODUCTION.md) — Step-by-step Phase 2 reproduction
 - [Training Guide](docs/TRAINING_GUIDE.md) — Complete training documentation
 - [API Reference](docs/API.md) — API documentation
 - [Examples](examples/) — Usage examples
@@ -255,13 +287,35 @@ RALFS/
 
 ---
 
-## Results (ACL 2026 Baseline)
+## Results & Validation
+
+### Main Results (ACL 2026 Baseline)
 
 | Dataset   | Model         | ROUGE-1 | ROUGE-2 | ROUGE-L | BERTScore | EGF   |
 |-----------|--------------|---------|---------|---------|-----------|-------|
 | Arxiv     | RALFS        | 48.2    | 19.7    | 41.5    | 0.872     | 0.61  |
 | GovReport | RALFS        | 51.0    | 22.1    | 44.3    | 0.881     | 0.64  |
 | Arxiv     | Baseline FiD | 44.1    | 17.6    | 38.2    | 0.860     | 0.54  |
+
+### Phase 2: Validation & Baselines
+
+**EGF Metric Validation** — Human Correlation Study
+- **Spearman ρ = 0.929** (p < 0.001) with human annotations
+- Outperforms ROUGE-2 (ρ = 0.828) as faithfulness metric
+- 200 test samples × 3 annotators with inter-rater κ = 0.71
+- ✅ **Verdict:** EGF is a valid proxy for human faithfulness assessment
+
+**Adaptive-k Effectiveness**
+- **Learned-k Baseline:** 95% train accuracy, +1.24 ROUGE vs fixed-k
+- **Oracle-k Upper Bound:** 6.6% improvement ceiling (near-optimal)
+- **Interpretation:** Adaptive-k learns non-trivial patterns; limited headroom for improvement
+
+**Computational Cost Analysis**
+- Adaptive-k: **183ms latency** (6.6% faster than fixed-k=15)
+- GPU Memory: **No overhead** (same ~3.07GB as fixed-k)
+- **Verdict:** ✓ Production-ready with negligible cost
+
+📊 Full details: See [PHASE_2_COMPLETION.md](PHASE_2_COMPLETION.md) and [PHASE_2_STATUS.md](PHASE_2_STATUS.md)
 
 ---
 

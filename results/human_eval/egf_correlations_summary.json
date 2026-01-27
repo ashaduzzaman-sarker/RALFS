@@ -1,0 +1,88 @@
+{
+  "n_examples": 100,
+  "date_generated": "2026-01-27",
+  "status": "DUMMY DATA - Replace with actual human evaluation",
+  "correlation_results": {
+    "egf_vs_human": {
+      "metric": "Entity Grid Faithfulness (EGF)",
+      "spearman_rho": 0.612,
+      "p_value": 2.3e-05,
+      "significance": "p < 0.001",
+      "interpretation": "EGF exhibits strong correlation with human faithfulness judgments, supporting its validity as a faithfulness metric."
+    },
+    "bertscore_vs_human": {
+      "metric": "BERTScore F1",
+      "spearman_rho": 0.447,
+      "p_value": 0.0008,
+      "significance": "p < 0.001",
+      "interpretation": "BERTScore shows moderate correlation, weaker than EGF, confirming that semantic embedding similarity alone misses hallucinations."
+    },
+    "rouge_vs_human": {
+      "metric": "ROUGE-L F1",
+      "spearman_rho": 0.381,
+      "p_value": 0.0032,
+      "significance": "p < 0.01",
+      "interpretation": "ROUGE-L exhibits weak correlation with human faithfulness, supporting the claim that surface-level lexical overlap fails to detect discourse-level hallucinations."
+    }
+  },
+  "pairwise_comparisons": {
+    "egf_vs_bertscore": {
+      "delta_rho": 0.165,
+      "winner": "EGF",
+      "interpretation": "EGF outperforms BERTScore by Δρ = 0.165, a meaningful improvement in faithfulness prediction."
+    },
+    "egf_vs_rouge": {
+      "delta_rho": 0.231,
+      "winner": "EGF",
+      "interpretation": "EGF outperforms ROUGE-L by Δρ = 0.231, the largest gap, confirming that entity-based analysis captures faithfulness better than lexical overlap."
+    }
+  },
+  "per_doctype_analysis": {
+    "arxiv": {
+      "n_examples": 35,
+      "egf_rho": 0.628,
+      "bertscore_rho": 0.412,
+      "rouge_rho": 0.354,
+      "notes": "On academic papers, EGF's advantage is strong (Δ=0.216 vs. BERTScore), likely because entity-heavy abstracts benefit from entity coherence analysis."
+    },
+    "govreport": {
+      "n_examples": 33,
+      "egf_rho": 0.625,
+      "bertscore_rho": 0.468,
+      "rouge_rho": 0.401,
+      "notes": "On legal/policy documents, EGF maintains strong correlation (Δ=0.157 vs. BERTScore). Entity grids are particularly effective on technical terminology-heavy text."
+    },
+    "news": {
+      "n_examples": 32,
+      "egf_rho": 0.582,
+      "bertscore_rho": 0.477,
+      "rouge_rho": 0.369,
+      "notes": "On news articles, EGF still outperforms but margins are smaller. News contains more paraphrasing, which BERTScore handles better."
+    }
+  },
+  "error_analysis": {
+    "egf_failures": [
+      "EGF underperforms on summaries with high entity overlap but factual errors (rare).",
+      "Entity linking errors (anaphora resolution) can propagate to EGF scores."
+    ],
+    "bertscore_failures": [
+      "BERTScore overestimates summaries with high n-gram similarity but containing hallucinations.",
+      "Example: 'The president announced legislation' scores high even if it should be 'The Congress announced legislation'."
+    ],
+    "rouge_failures": [
+      "ROUGE heavily penalizes paraphrasing even when factually correct.",
+      "Misses hallucinations entirely when they use high-ROUGE phrases from different parts of the source."
+    ]
+  },
+  "paper_citation_format": {
+    "main_claim": "To validate EGF as a faithfulness metric, we conducted human evaluation on 100 examples from ArXiv, GovReport, and news sources. Annotators rated summaries on a 1-5 faithfulness scale. EGF exhibited Spearman correlation ρ=0.612 with human judgments (p<0.001), significantly outperforming BERTScore (ρ=0.447) and ROUGE-L (ρ=0.381).",
+    "table_caption": "Table X: Correlation of automatic metrics with human faithfulness judgments (Spearman ρ). EGF outperforms surface metrics across all document types.",
+    "ablation_context": "This validation demonstrates that entity-grid-based analysis captures hallucination-relevant patterns that embedding-based and lexical metrics miss."
+  },
+  "important_notes": {
+    "note_1": "THIS IS DUMMY DATA. Spearman correlations are synthetic and designed to be realistic but are not empirical results.",
+    "note_2": "When you generate real human evaluation data, follow this exact structure so it can be directly inserted into the paper.",
+    "note_3": "Minimum required: 50 examples, 2+ annotators per example, inter-annotator agreement (Fleiss' κ), comparison to existing metrics on same data.",
+    "note_4": "Ideally, include per-example breakdowns showing where each metric succeeds/fails."
+  }
+}

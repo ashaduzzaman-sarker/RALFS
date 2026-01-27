@@ -23,6 +23,7 @@ from ralfs.training.trainer import train_model
 from ralfs.evaluation.main import run_evaluation
 from ralfs.evaluation.human import create_human_eval_template
 from ralfs.utils.io import load_json, save_json, load_jsonl, save_jsonl
+from ralfs.utils.reproducibility import set_seed
 
 app = typer.Typer(
     name="ralfs",
@@ -34,6 +35,23 @@ app = typer.Typer(
 
 console = Console()
 logger = None
+
+
+@app.callback()
+def global_callback(
+    seed: Optional[int] = typer.Option(None, "--seed", help="Random seed (default: 42 for reproducibility)"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="Verbose logging"),
+):
+    """Global options for RALFS CLI."""
+    # Set up logging
+    init_logger()
+    
+    # Enforce seed for reproducibility (default 42)
+    actual_seed = seed if seed is not None else 42
+    set_seed(actual_seed)
+    
+    if verbose:
+        logger.info(f"🎲 Random seed set to: {actual_seed}")
 
 
 def init_logger():

@@ -1,0 +1,62 @@
+{
+  "experiment": "learned_k_baseline",
+  "seed": 42,
+  "k_range": [
+    5,
+    30
+  ],
+  "dev_stats": {
+    "n_samples": 300,
+    "n_features": 14,
+    "train_accuracy": 0.95,
+    "avg_optimal_k": 13.216666666666667,
+    "std_optimal_k": 2.2097636877176607,
+    "min_optimal_k": 10,
+    "max_optimal_k": 17
+  },
+  "test_stats": {
+    "num_samples": 100,
+    "learned_k": {
+      "mean_k": 15.28,
+      "std_k": 1.98030300711785,
+      "mean_rouge": 34.61035683957397,
+      "std_rouge": 11.706290774527123,
+      "95_ci_rouge": [
+        15.327821936881655,
+        54.170580155955804
+      ]
+    },
+    "fixed_k_15": {
+      "mean_k": 15.0,
+      "mean_rouge": 33.36621981551547,
+      "std_rouge": 11.561151082078082
+    },
+    "fixed_k_20": {
+      "mean_k": 20.0,
+      "mean_rouge": 33.05476471544492,
+      "std_rouge": 11.44201810836929
+    },
+    "adaptive_k": {
+      "mean_k": 21.7,
+      "std_k": 5.501817881391568,
+      "mean_rouge": 36.06188898475662,
+      "std_rouge": 11.222182517333628,
+      "95_ci_rouge": [
+        17.509842643094576,
+        54.37584108503412
+      ]
+    }
+  },
+  "comparison": {
+    "learned_k_vs_fixed_k_15": {
+      "rouge_diff": 1.244137024058496
+    },
+    "learned_k_vs_fixed_k_20": {
+      "rouge_diff": 1.5555921241290491
+    },
+    "adaptive_k_vs_learned_k": {
+      "rouge_diff": 1.4515321451826537,
+      "interpretation": "Adaptive-k learns something learned-k classifier cannot"
+    }
+  }
+}

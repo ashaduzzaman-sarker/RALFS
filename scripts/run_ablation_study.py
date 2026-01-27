@@ -7,16 +7,17 @@ Tests the impact of individual components:
 2. LoRA rank (r=8, 16, 32)
 3. Number of passages (k=5, 10, 15, 20)
 4. Retrieval methods (dense, sparse, hybrid)
+
+Usage:
+    python -m scripts.run_ablation_study
+    # or via poetry:
+    poetry run python scripts/run_ablation_study.py
 """
 
-import sys
 from pathlib import Path
-from typing import Dict, List, Any
+from typing import Dict, Any
 import json
 from omegaconf import OmegaConf
-
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent.parent))
 
 from ralfs.core.logging import setup_logging, get_logger
 from ralfs.core.config import load_config

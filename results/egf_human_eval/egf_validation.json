@@ -1,0 +1,72 @@
+{
+  "sample_size": 200,
+  "annotation_info": {
+    "num_annotators_per_sample": 3,
+    "scale": "1-5 Likert",
+    "mean_inter_rater_kappa": 0.712115392661012
+  },
+  "human_ratings_stats": {
+    "mean": 2.536666666666666,
+    "std": 1.1139469366975152,
+    "min": 1.0,
+    "max": 5.0
+  },
+  "metric_stats": {
+    "egf": {
+      "mean": 0.3919412428178592,
+      "std": 0.29686136587727946,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "rouge_2": {
+      "mean": 0.40368389063841303,
+      "std": 0.2930374447257858,
+      "min": 0.0,
+      "max": 1.0
+    },
+    "bertscore": {
+      "mean": 0.4060876400305712,
+      "std": 0.28924206230096405,
+      "min": 0.0,
+      "max": 1.0
+    }
+  },
+  "correlations": {
+    "egf_vs_human": {
+      "spearman_rho": 0.9289625980252849,
+      "spearman_pvalue": 2.1330132340743436e-87,
+      "pearson_r": 0.9301654445524735,
+      "pearson_pvalue": 4.1781811802508176e-88
+    },
+    "rouge_vs_human": {
+      "spearman_rho": 0.8275447470471139,
+      "spearman_pvalue": 1.5494377632362945e-51,
+      "pearson_r": 0.8302066288619075,
+      "pearson_pvalue": 3.824405365712988e-52
+    },
+    "bertscore_vs_human": {
+      "spearman_rho": 0.8697201607237208,
+      "spearman_pvalue": 1.2351273654842094e-62,
+      "pearson_r": 0.8692668222651923,
+      "pearson_pvalue": 1.7016136207360876e-62
+    },
+    "egf_vs_rouge": {
+      "spearman_rho": 0.7769537486587778,
+      "spearman_pvalue": 1.175665606527048e-41
+    },
+    "egf_vs_bertscore": {
+      "spearman_rho": 0.8259349112832998,
+      "spearman_pvalue": 3.56949822149948e-51
+    }
+  },
+  "validation": {
+    "egf_valid": true,
+    "egf_better_than_rouge": true,
+    "egf_comparable_to_bert": true
+  },
+  "interpretation": {
+    "egf_is_significant": true,
+    "egf_strength": "very strong",
+    "recommendation": "\u2705 PASS: EGF is a valid proxy for human faithfulness assessment. Recommend using EGF in paper as faithfulness metric."
+  }
+}

@@ -1,102 +1,116 @@
-# # src/ralfs/__init__.py
-# from __future__ import annotations
+"""
+RALFS: Retrieval-Augmented Long-Form Summarization
 
-# # Core utilities
-# from .core import (
-#     get_logger,
-#     RALFSConfig,
-#     load_config,
-#     ROOT_DIR,
-#     DATA_DIR,
-#     PROCESSED_DIR,
-#     INDEX_DIR,
-#     CHECKPOINTS_DIR,
-#     RESULTS_DIR,
-# )
+A research-grade system for long-document summarization with:
+- Adaptive k-selection for Fusion-in-Decoder (novel contribution)
+- Entity Grid Faithfulness (EGF) metric (novel contribution)
+- Hybrid retrieval (dense + sparse + ColBERT)
+- Reproducible experiment infrastructure
 
-# # Data pipeline
-# from .data import run_preprocessing, build_index
+Conference Paper: NeurIPS/ACL 2026
+"""
 
-# # Retrieval
-# from .retriever import (
-#     BaseRetriever,
-#     DenseRetriever,
-#     SparseRetriever,
-#     HybridRetriever,
-#     CrossEncoderReranker,
-#     ColbertRetriever,
-#     reciprocal_rank_fusion,
-#     create_retriever,          # from retriever.factory
-# )
+from __future__ import annotations
 
-# # Generation
-# from .generator import (
-#     BaseGenerator,
-#     FiDGenerator,
-#     create_generator,
-# )
+__version__ = "1.0.0"
 
-# # Training
-# from .training import FiDDataset, train
+# Core utilities
+from .core import (
+    RALFSConfig,
+    load_config,
+    get_logger,
+    setup_logging,
+    ROOT_DIR,
+    DATA_DIR,
+    PROCESSED_DIR,
+    INDEX_DIR,
+    CHECKPOINTS_DIR,
+    RESULTS_DIR,
+)
 
-# # Evaluation
-# from .evaluation import (
-#     compute_egf,
-#     create_human_eval_template,
-#     evaluate_predictions,
-#     evaluate,
-# )
+# Data pipeline
+from .data import (
+    run_preprocessing,
+    build_index,
+    IndexBuilder,
+)
 
-# # Utils
-# from .utils import load_json, save_json
+# Retrieval
+from .retriever import (
+    BaseRetriever,
+    DenseRetriever,
+    SparseRetriever,
+    HybridRetriever,
+    create_retriever,
+)
 
-# __version__ = "1.0.0"
+# Generation
+from .generator import (
+    BaseGenerator,
+    FiDGenerator,
+    create_generator,
+)
 
-# __all__ = [
-#     # Core
-#     "get_logger",
-#     "RALFSConfig",
-#     "load_config",
-#     "ROOT_DIR",
-#     "DATA_DIR",
-#     "PROCESSED_DIR",
-#     "INDEX_DIR",
-#     "CHECKPOINTS_DIR",
-#     "RESULTS_DIR",
+# Training
+from .training import FiDDataset
 
-#     # Data
-#     "run_preprocessing",
-#     "build_index",
+# Evaluation
+from .evaluation import (
+    compute_egf,
+    evaluate_rouge,
+    evaluate_bertscore,
+)
 
-#     # Retriever
-#     "BaseRetriever",
-#     "DenseRetriever",
-#     "SparseRetriever",
-#     "HybridRetriever",
-#     "CrossEncoderReranker",
-#     "ColbertRetriever",
-#     "reciprocal_rank_fusion",
-#     "create_retriever",
+# Utils
+from .utils import (
+    load_json,
+    save_json,
+    set_seed,
+)
 
-#     # Generator
-#     "BaseGenerator",
-#     "FiDGenerator",
-#     "create_generator",
-
-#     # Training
-#     "FiDDataset",
-#     "train",
-
-#     # Evaluation
-#     "compute_egf",
-#     "create_human_eval_template",
-#     "evaluate_predictions",
-#     "evaluate",
-
-#     # Utils
-#     "load_json",
-#     "save_json",
-
-#     # Version
-#     "__version__",
-# ]
+__all__ = [
+    # Version
+    "__version__",
+    
+    # Core
+    "RALFSConfig",
+    "load_config",
+    "get_logger",
+    "setup_logging",
+    "ROOT_DIR",
+    "DATA_DIR",
+    "PROCESSED_DIR",
+    "INDEX_DIR",
+    "CHECKPOINTS_DIR",
+    "RESULTS_DIR",
+    
+    # Data
+    "run_preprocessing",
+    "build_index",
+    "IndexBuilder",
+    
+    # Retriever
+    "BaseRetriever",
+    "DenseRetriever",
+    "SparseRetriever",
+    "HybridRetriever",
+    "create_retriever",
+    
+    # Generator
+    "BaseGenerator",
+    "FiDGenerator",
+    "create_generator",
+    
+    # Training
+    "FiDDataset",
+    
+    # Evaluation
+    "compute_egf",
+    "evaluate_rouge",
+    "evaluate_bertscore",
+    
+    # Utils
+    "load_json",
+    "save_json",
+    "set_seed",
+]

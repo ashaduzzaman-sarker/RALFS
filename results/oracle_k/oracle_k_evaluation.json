@@ -1,0 +1,79 @@
+{
+  "experiment": "oracle_k_upper_bound",
+  "seed": 42,
+  "k_range": [
+    5,
+    30
+  ],
+  "num_samples": 200,
+  "oracle_k_distribution": {
+    "mean": 17.07,
+    "std": 2.3334738052954442,
+    "median": 17.0,
+    "min": 10,
+    "max": 24,
+    "p25": 16.0,
+    "p75": 18.0
+  },
+  "adaptive_k_distribution": {
+    "mean": 17.11,
+    "std": 2.5451718998920287,
+    "median": 17.0,
+    "min": 12,
+    "max": 25,
+    "p25": 15.0,
+    "p75": 19.0
+  },
+  "oracle_rouge_stats": {
+    "mean": 35.765378785848604,
+    "std": 8.562045669933584,
+    "min": 20.986487112001655,
+    "max": 51.589698478445875,
+    "95_ci": [
+      22.154468171759213,
+      50.332593873264265
+    ]
+  },
+  "adaptive_rouge_stats": {
+    "mean": 33.54091226129356,
+    "std": 8.770216157527779,
+    "min": 17.22151939405716,
+    "max": 51.589698478445875,
+    "95_ci": [
+      18.140526801789782,
+      48.62625815572206
+    ]
+  },
+  "fixed_k_rouge_stats": {
+    "k_15": {
+      "mean": 33.33376527710905,
+      "std": 8.751110920128
+    },
+    "k_20": {
+      "mean": 32.86087386718286,
+      "std": 8.831547707239944
+    }
+  },
+  "gap_analysis": {
+    "oracle_vs_adaptive": {
+      "mean": 2.224466524555046,
+      "std": 1.8216661774205691,
+      "max": 6.793031945210693,
+      "percent_samples_oracle_better": 0.8
+    },
+    "oracle_vs_fixed_k15": {
+      "mean": 2.431613508739554,
+      "std": 1.6463447071258472
+    },
+    "oracle_vs_fixed_k20": {
+      "mean": 2.9045049186657432,
+      "std": 1.6033115601796812
+    }
+  },
+  "oracle_improvement_percent": {
+    "over_adaptive": 6.632099053316716,
+    "over_fixed_k15": 7.294745998614769,
+    "over_fixed_k20": 8.838793911583657
+  },
+  "interpretation": "Oracle improves 6.6% over adaptive-k. Indicates room for improvement in k-selection strategy."
+}

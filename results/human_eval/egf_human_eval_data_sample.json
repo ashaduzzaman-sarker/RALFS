@@ -1,0 +1,73 @@
+{
+  "n_examples": 100,
+  "methodology": "Synthetic human evaluation data for Entity Grid Faithfulness (EGF) validation. Generated to demonstrate realistic correlation patterns between human judgments and automatic metrics.",
+  "examples": [
+    {
+      "id": "example_001",
+      "doc_type": "arxiv",
+      "document": "This paper introduces a novel method for long-document summarization. Our approach combines retrieval-augmented generation with adaptive passage selection. We achieve ROUGE-2 improvements of 12% on ArXiv and GovReport benchmarks. The key insight is that passage count should adapt to query difficulty, not remain fixed. We validate using entity grid faithfulness, a new metric for evaluating hallucinations.",
+      "reference_summary": "The paper proposes adaptive k-selection for FiD, improving ROUGE-2 by 12%. It combines dense, sparse, and neural retrieval. A new faithfulness metric based on entity grids is introduced.",
+      "generated_summary": "The paper presents adaptive k-selection for long-form summarization, achieving 12% ROUGE-2 improvements on ArXiv and GovReport. The method combines hybrid retrieval (dense, sparse, ColBERT) with adaptive passage selection. A new metric called Entity Grid Faithfulness evaluates coherence and hallucination avoidance.",
+      "human_faithfulness_rating": 5,
+      "egf_score": 0.79,
+      "bertscore_f1": 0.72,
+      "rouge_l_f1": 0.68
+    },
+    {
+      "id": "example_002",
+      "doc_type": "govreport",
+      "document": "The government report details the fiscal impact of proposed legislation. Section 2 estimates the budget impact at $5.2 billion over 10 years. Section 3 analyzes labor market effects, projecting 2,500 job gains. Section 4 discusses environmental implications and compliance costs. The report concludes that benefits exceed costs by a 3:1 ratio.",
+      "reference_summary": "The fiscal impact is estimated at $5.2 billion over 10 years. Labor market effects include 2,500 projected job gains. Benefits exceed costs at a 3:1 ratio.",
+      "generated_summary": "The report estimates fiscal impact at $5.2 billion over 10 years. Labor market projections show 2,500 job gains. Environmental compliance costs are detailed in Section 4. Overall benefits exceed costs with a 3:1 ratio.",
+      "human_faithfulness_rating": 5,
+      "egf_score": 0.81,
+      "bertscore_f1": 0.70,
+      "rouge_l_f1": 0.72
+    },
+    {
+      "id": "example_003",
+      "doc_type": "news",
+      "document": "Researchers announce breakthrough in quantum computing. The new processor achieves 1000-qubit capacity, a world record. Error rates dropped to 0.1%, enabling practical applications. Industry experts predict commercial viability within 5 years. Investment funding reached $2 billion this quarter.",
+      "reference_summary": "Quantum computing breakthrough: new processor reaches 1000 qubits. Error rates improved to 0.1%, enabling practical use. Commercial viability expected within 5 years.",
+      "generated_summary": "Researchers achieved a quantum computing breakthrough with a 1000-qubit processor. Error rates improved to 0.1%, enabling practical applications. Commercial viability is projected within 5 years. Recent investment reached $2 billion this quarter.",
+      "human_faithfulness_rating": 4,
+      "egf_score": 0.76,
+      "bertscore_f1": 0.74,
+      "rouge_l_f1": 0.71
+    },
+    {
+      "id": "example_004",
+      "doc_type": "arxiv",
+      "document": "This paper introduces a novel method for long-document summarization. Our approach combines retrieval-augmented generation with adaptive passage selection. We achieve ROUGE-2 improvements of 12% on ArXiv and GovReport benchmarks. The key insight is that passage count should adapt to query difficulty, not remain fixed. We validate using entity grid faithfulness, a new metric for evaluating hallucinations.",
+      "reference_summary": "The paper proposes adaptive k-selection for FiD, improving ROUGE-2 by 12%. It combines dense, sparse, and neural retrieval. A new faithfulness metric based on entity grids is introduced.",
+      "generated_summary": "The paper proposes adaptive methods for summarization, with improvements on ArXiv benchmarks. It uses retrieval with entity grids for evaluation. ROUGE-2 improvements are reported, though specific numbers vary by dataset.",
+      "human_faithfulness_rating": 3,
+      "egf_score": 0.55,
+      "bertscore_f1": 0.68,
+      "rouge_l_f1": 0.62
+    },
+    {
+      "id": "example_005",
+      "doc_type": "govreport",
+      "document": "The government report details the fiscal impact of proposed legislation. Section 2 estimates the budget impact at $5.2 billion over 10 years. Section 3 analyzes labor market effects, projecting 2,500 job gains. Section 4 discusses environmental implications and compliance costs. The report concludes that benefits exceed costs by a 3:1 ratio.",
+      "reference_summary": "The fiscal impact is estimated at $5.2 billion over 10 years. Labor market effects include 2,500 projected job gains. Benefits exceed costs at a 3:1 ratio.",
+      "generated_summary": "The report discusses fiscal impacts and labor market effects. Budget estimates are in the range of $5 billion. Job gains are expected but exact numbers are uncertain. Cost-benefit analysis suggests positive outcomes.",
+      "human_faithfulness_rating": 2,
+      "egf_score": 0.48,
+      "bertscore_f1": 0.64,
+      "rouge_l_f1": 0.55
+    },
+    {
+      "id": "example_006",
+      "doc_type": "news",
+      "document": "Researchers announce breakthrough in quantum computing. The new processor achieves 1000-qubit capacity, a world record. Error rates dropped to 0.1%, enabling practical applications. Industry experts predict commercial viability within 5 years. Investment funding reached $2 billion this quarter.",
+      "reference_summary": "Quantum computing breakthrough: new processor reaches 1000 qubits. Error rates improved to 0.1%, enabling practical use. Commercial viability expected within 5 years.",
+      "generated_summary": "Retrieval-based systems improve summarization significantly. Entity grids are useful for many NLP tasks. Adaptive methods work better than fixed approaches in general.",
+      "human_faithfulness_rating": 1,
+      "egf_score": 0.32,
+      "bertscore_f1": 0.58,
+      "rouge_l_f1": 0.48
+    }
+  ],
+  "note": "This is dummy data generated for demonstration purposes. In the final paper, replace with actual human evaluation on 100+ examples."
+}
